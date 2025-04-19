@@ -42,7 +42,7 @@ namespace MyProject.Web.Controllers
             if (ModelState.IsValid)
             {
                 await _userService.CreateAsync(user);
-                RedirectToAction("Index");
+                return RedirectToAction("Index");
             }
             return View(user);
         }
