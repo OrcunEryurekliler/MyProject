@@ -15,12 +15,24 @@ namespace MyProject.Core.Models
         [Required(ErrorMessage = "İsim boş bırakılamaz")]
         public required string Name { get; set; }
 
-        [Range(18, 100, ErrorMessage = "Yaş 18 ile 100 arasında olmalıdır")]
+        [Range(0, 100, ErrorMessage = "Yaş 0 ile 100 arasında olmalıdır")]
         public int Age { get; set; }
 
         [Required(ErrorMessage = "Email adresi boş bırakılamaz")]
         [EmailAddress(ErrorMessage = "Geçerli bir email adresi giriniz")]
-        public required string Email { get; set; } 
+        public required string Email { get; set; }
+
+        public int RoleId { get; set; }
+
+        public Role Role { get; set; } = null!;
+
+        [Required(ErrorMessage ="Cep telefonu zorunludur")]
+        [StringLength(11, MinimumLength = 11, ErrorMessage = "Cep telefonu 11 haneli olmalıdır")]
+        [RegularExpression(@"^05\d{9}$", ErrorMessage = "Cep telefonu 05 ile başlamalı ve 11 hane olmalı")]
+        public required string Cellphone { get; set; }
+
+        [Range(8, 16, ErrorMessage = "Şifre 8-16 karakter arasında olmalıdır")]
+        public required string Password { get; set; }
 
     }
 }
