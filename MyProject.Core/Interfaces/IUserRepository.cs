@@ -14,7 +14,5 @@ namespace MyProject.Core.Interfaces
         Task<User> CreateAsync(User user);
         Task<User> UpdateAsync(User user);
         Task DeleteAsync(int id);
-        Task<User> GetByNameAsync(string name);
-        Task<User> GetByEmailAsync(string email);
     }
 }
