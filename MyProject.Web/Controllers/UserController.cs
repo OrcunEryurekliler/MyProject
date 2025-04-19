@@ -1,0 +1,100 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using MyProject.Core.Models;
+using MyProject.Services.Interfaces;
+
+namespace MyProject.Web.Controllers
+{
+    public class UserController : Controller
+    {
+        private readonly IUserService _userService;
+        public UserController(IUserService userService) 
+        { 
+            _userService = userService;
+        }
+        
+        [HttpGet]
+        public async Task<IActionResult> Index()
+        {
+            var users = await _userService.GetAllAsync();
+            return View(users);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Details(int id)
+        {
+            var user = await _userService.GetAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            return View(user);
+        }
+        [HttpGet]
+        public IActionResult Create()
+        {
+            return View(); // Kullanıcı eklemek için formu gösteriyoruz
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(User user)
+        {
+            if (ModelState.IsValid)
+            {
+                await _userService.CreateAsync(user);
+                RedirectToAction("Index");
+            }
+            return View(user);
+        }
+
+        // GET: User/Edit/5
+        public async Task<IActionResult> Edit(int id)
+        {
+            var user = await _userService.GetAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            return View(user); // Güncelleme formunu doldurmak için kullanıcıyı View'a gönderiyoruz
+        }
+
+        // POST: User/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, User user)
+        {
+            if (id != user.Id)
+            {
+                return BadRequest();
+            }
+
+            if (ModelState.IsValid)
+            {
+                await _userService.UpdateAsync(user); // Güncellenmiş veriyi kaydediyoruz
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(user); // Hata varsa formu tekrar gösteriyoruz
+        }
+        // GET: User/Delete/5
+        public async Task<IActionResult> Delete(int id)
+        {
+            var user = await _userService.GetAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            return View(user); // Silme onayı için kullanıcıyı View'a gönderiyoruz
+        }
+
+        // POST: User/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            await _userService.DeleteAsync(id);
+            return RedirectToAction(nameof(Index));
+        }
+
+    }
+}
