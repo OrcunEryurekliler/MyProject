@@ -81,27 +81,67 @@ namespace MyProject.Web.Controllers
             {
                 return NotFound();
             }
-            return View(user); // Güncelleme formunu doldurmak için kullanıcıyı View'a gönderiyoruz
+            UserEditViewModel userEditViewModel = new UserEditViewModel
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                Age = user.Age,
+                Cellphone = user.Cellphone,
+                Password = user.Password,
+                TCKN = user.TCKN,
+                RoleId = 1
+            };
+            
+            return View(userEditViewModel); // Güncelleme formunu doldurmak için kullanıcıyı View'a gönderiyoruz
         }
 
         // POST: User/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, User user)
+        public async Task<IActionResult> Edit(int id, UserEditViewModel model)
         {
-            if (id != user.Id)
+            if (id != model.Id)
             {
                 return BadRequest();
             }
 
-            if (ModelState.IsValid)
+            var loggedInUser = await _userService.GetAsync(User.Identity.Name);  // Kullanıcının kimliğini alıyoruz
+            if (id != model.Id || loggedInUser.Id != model.Id)  // Kimlik doğrulama kontrolü
             {
-                await _userService.UpdateAsync(user); // Güncellenmiş veriyi kaydediyoruz
-                return RedirectToAction(nameof(Index));
+                return Forbid();  // Geçerli olmayan bir ID ile işlem yapılmasına izin verilmiyor
             }
 
-            return View(user); // Hata varsa formu tekrar gösteriyoruz
+
+            if (ModelState.IsValid)
+            {
+                var user = new User
+                {
+                    Id = model.Id,
+                    Name = model.Name,
+                    Email = model.Email,
+                    Age = model.Age,
+                    Cellphone = model.Cellphone,
+                    Password = model.Password,
+                    TCKN = model.TCKN,
+                    RoleId = 1
+                };
+
+                try
+                {
+                    await _userService.UpdateAsync(user);
+                    return RedirectToAction("Index");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.InnerException?.Message); // Log the exception details
+                    throw;
+                }
+            }
+
+            return View(model);
         }
+
         // GET: User/Delete/5
         public async Task<IActionResult> Delete(int id)
         {

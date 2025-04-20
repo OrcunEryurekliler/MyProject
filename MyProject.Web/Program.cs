@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using MyProject.Core.Interfaces;
@@ -16,7 +17,10 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+
 builder.Services.AddControllersWithViews();
+builder.Services.AddDefaultIdentity<IdentityUser>()
+    .AddEntityFrameworkStores<AppDbContext>();
 
 var app = builder.Build();
 
