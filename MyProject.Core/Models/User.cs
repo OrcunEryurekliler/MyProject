@@ -12,6 +12,11 @@ namespace MyProject.Core.Models
         [Required]
         public int Id { get; set; }
 
+        [Required(ErrorMessage = "T.C. Kimlik Numarası zorunludur")]
+        [StringLength(11, MinimumLength = 11, ErrorMessage = "T.C. Kimlik Numarası 11 haneli olmalıdır")]
+        [RegularExpression(@"^\d{11}$", ErrorMessage = "T.C. Kimlik Numarası sadece rakamlardan oluşmalı ve 11 hane olmalı")]
+        public required string TCKN { get; set; }
+
         [Required(ErrorMessage = "İsim boş bırakılamaz")]
         public required string Name { get; set; }
 
@@ -30,8 +35,7 @@ namespace MyProject.Core.Models
         [StringLength(11, MinimumLength = 11, ErrorMessage = "Cep telefonu 11 haneli olmalıdır")]
         [RegularExpression(@"^05\d{9}$", ErrorMessage = "Cep telefonu 05 ile başlamalı ve 11 hane olmalı")]
         public required string Cellphone { get; set; }
-
-        [Range(8, 16, ErrorMessage = "Şifre 8-16 karakter arasında olmalıdır")]
+            
         public required string Password { get; set; }
 
     }

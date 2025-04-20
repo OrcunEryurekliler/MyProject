@@ -1,15 +1,18 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MyProject.Core.Models;
 using MyProject.Services.Interfaces;
+using MyProject.Web.ViewModels;
 
 namespace MyProject.Web.Controllers
 {
     public class UserController : Controller
     {
         private readonly IUserService _userService;
-        public UserController(IUserService userService) 
+        private readonly IRoleService _roleService;
+        public UserController(IUserService userService,IRoleService roleService) 
         { 
             _userService = userService;
+            _roleService = roleService;
         }
         
         [HttpGet]
@@ -37,15 +40,38 @@ namespace MyProject.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(User user)
+        public async Task<IActionResult> Create(UserCreateViewModel model)
         {
             if (ModelState.IsValid)
             {
-                await _userService.CreateAsync(user);
-                return RedirectToAction("Index");
+                var user = new User
+                {
+                    Name = model.Name,
+                    Email = model.Email,
+                    Age = model.Age,
+                    Cellphone = model.Cellphone,
+                    Password = model.Password,
+                    TCKN = model.TCKN,
+                    RoleId = 1
+                };
+
+                try
+                {
+                    await _userService.CreateAsync(user);
+                    return RedirectToAction("Index");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.InnerException?.Message); // detay burada
+                    throw; // logladıktan sonra tekrar fırlatabilirsin
+                }
+
+                
             }
-            return View(user);
+
+            return View(model);
         }
+
 
         // GET: User/Edit/5
         public async Task<IActionResult> Edit(int id)
