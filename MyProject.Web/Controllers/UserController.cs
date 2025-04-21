@@ -50,9 +50,7 @@ namespace MyProject.Web.Controllers
                 {
                     Name = model.Name,
                     Email = model.Email,
-                    Age = model.Age,
                     Cellphone = model.Cellphone,
-                    Password = model.Password,
                     TCKN = model.TCKN,
                     RoleId = 1
                 };
@@ -90,7 +88,6 @@ namespace MyProject.Web.Controllers
                 Email = user.Email,
                 Age = user.Age,
                 Cellphone = user.Cellphone,
-                Password = user.Password,
                 TCKN = user.TCKN,
                 RoleId = 1
             };
@@ -131,9 +128,7 @@ namespace MyProject.Web.Controllers
                 Id = model.Id,
                 Name = model.Name,
                 Email = model.Email,
-                Age = model.Age,
                 Cellphone = model.Cellphone,
-                Password = model.Password,
                 TCKN = model.TCKN,
                 RoleId = 1
             };

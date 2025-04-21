@@ -1,5 +1,4 @@
-﻿// AccountController.cs
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using MyProject.Core.Models;
@@ -7,12 +6,27 @@ using MyProject.Web.ViewModels;
 
 public class AccountController : Controller
 {
+    private readonly UserManager<User> _userManager;
     private readonly SignInManager<User> _signInManager;
-    public AccountController(SignInManager<User> signInManager)
-        => _signInManager = signInManager;
+
+    public AccountController(UserManager<User> userManager, SignInManager<User> signInManager)
+    {
+        _userManager = userManager;
+        _signInManager = signInManager;
+    }
+
     [AllowAnonymous]
     [HttpGet]
-    public IActionResult Login() => View();
+    public IActionResult Login() 
+    {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+
+        return View();
+    } 
+
     [AllowAnonymous]
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -23,7 +37,7 @@ public class AccountController : Controller
         var result = await _signInManager.PasswordSignInAsync(
             m.Email, m.Password, isPersistent: false, lockoutOnFailure: false);
 
-        if (result.Succeeded) return RedirectToAction("Account", "Login");
+        if (result.Succeeded) return RedirectToAction("User", "Index");
 
         ModelState.AddModelError("", "E‑posta veya şifre yanlış.");
         return View(m);
@@ -35,5 +49,54 @@ public class AccountController : Controller
     {
         await _signInManager.SignOutAsync();
         return RedirectToAction("Login");
+    }
+
+    // GET: /Account/Register
+    [AllowAnonymous]
+    [HttpGet]
+    public IActionResult Register()
+    {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+
+        return View();
+    }
+    [AllowAnonymous]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Register(UserRegisterViewModel model)
+    {
+        if (ModelState.IsValid)
+        {
+            var user = new User
+            {
+                UserName = model.Email,
+                Email = model.Email,
+                Name = model.Name,
+                TCKN = model.TCKN,
+                Cellphone = model.Cellphone,
+                DateOfBirth = model.DateOfBirth,
+                Gender = model.Gender,
+                MaritalStatus = model.MaritalStatus,
+                RoleId = 1
+                // Yaş zaten UserRegisterViewModel'den hesaplanıyor, manuel olarak set edilmesine gerek yok.
+            };
+
+            var result = await _userManager.CreateAsync(user, model.Password);
+
+            if (result.Succeeded)
+            {
+                await _signInManager.SignInAsync(user, isPersistent: false);
+                return RedirectToAction("Login", "Account");
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+        }
+        return View(model);
     }
 }
