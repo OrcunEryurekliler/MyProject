@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using MyProject.Core.Interfaces;
+using MyProject.Core.Models;
 using MyProject.Infrastructure.Data.Context;
 using MyProject.Infrastructure.Data.Repositories.EfRepository;
 using MyProject.Services.Implementations;
@@ -19,8 +21,20 @@ builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 
 builder.Services.AddControllersWithViews();
-builder.Services.AddDefaultIdentity<IdentityUser>()
-    .AddEntityFrameworkStores<AppDbContext>();
+builder.Services.AddDefaultIdentity<User>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = false;
+})
+.AddRoles<IdentityRole<int>>()                     // Eðer rollerle çalýþacaksanýz
+.AddEntityFrameworkStores<AppDbContext>();
+builder.Services.AddMvc(options =>
+{
+    options.Filters.Add(new AuthorizeFilter());
+});
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Account/Login"; // Giriþ sayfanýzýn yolu
+});
 
 var app = builder.Build();
 
@@ -36,6 +50,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+app.UseAuthentication(); // BU SATIRI EKLE
 
 app.UseAuthorization();
 

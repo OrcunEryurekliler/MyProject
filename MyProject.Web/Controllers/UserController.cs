@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 using MyProject.Core.Models;
+using MyProject.Services.Implementations;
 using MyProject.Services.Interfaces;
 using MyProject.Web.ViewModels;
 
@@ -9,12 +11,12 @@ namespace MyProject.Web.Controllers
     {
         private readonly IUserService _userService;
         private readonly IRoleService _roleService;
-        public UserController(IUserService userService,IRoleService roleService) 
-        { 
+        public UserController(IUserService userService, IRoleService roleService)
+        {
             _userService = userService;
             _roleService = roleService;
         }
-        
+
         [HttpGet]
         public async Task<IActionResult> Index()
         {
@@ -66,7 +68,7 @@ namespace MyProject.Web.Controllers
                     throw; // logladıktan sonra tekrar fırlatabilirsin
                 }
 
-                
+
             }
 
             return View(model);
@@ -92,55 +94,55 @@ namespace MyProject.Web.Controllers
                 TCKN = user.TCKN,
                 RoleId = 1
             };
-            
+
             return View(userEditViewModel); // Güncelleme formunu doldurmak için kullanıcıyı View'a gönderiyoruz
         }
 
         // POST: User/Edit/5
+
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, UserEditViewModel model)
         {
+            if (!User.Identity.IsAuthenticated)
+                return Challenge();  // veya RedirectToAction("Login", "Account");
+
+            // 1. URL’den gelen id ile formdaki gizli model.Id eşleşiyor mu?
             if (id != model.Id)
-            {
                 return BadRequest();
-            }
 
-            var loggedInUser = await _userService.GetAsync(User.Identity.Name);  // Kullanıcının kimliğini alıyoruz
-            if (id != model.Id || loggedInUser.Id != model.Id)  // Kimlik doğrulama kontrolü
+            // 2. Oturum açmış kullanıcının ID'sini claim'ten al
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdString, out var loggedInUserId))
+                return BadRequest("Geçersiz kullanıcı kimliği.");
+
+            // 3. Sadece kendi verisini düzenleyebilsin
+            if (loggedInUserId != model.Id)
+                return Forbid();
+
+            // 4. Form doğrulama
+            if (!ModelState.IsValid)
+                return View(model);
+
+            // 5. Güncelleme için domain modeli oluştur
+            var user = new User
             {
-                return Forbid();  // Geçerli olmayan bir ID ile işlem yapılmasına izin verilmiyor
-            }
+                Id = model.Id,
+                Name = model.Name,
+                Email = model.Email,
+                Age = model.Age,
+                Cellphone = model.Cellphone,
+                Password = model.Password,
+                TCKN = model.TCKN,
+                RoleId = 1
+            };
 
-
-            if (ModelState.IsValid)
-            {
-                var user = new User
-                {
-                    Id = model.Id,
-                    Name = model.Name,
-                    Email = model.Email,
-                    Age = model.Age,
-                    Cellphone = model.Cellphone,
-                    Password = model.Password,
-                    TCKN = model.TCKN,
-                    RoleId = 1
-                };
-
-                try
-                {
-                    await _userService.UpdateAsync(user);
-                    return RedirectToAction("Index");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.InnerException?.Message); // Log the exception details
-                    throw;
-                }
-            }
-
-            return View(model);
+            // 6. Servisi çağır
+            await _userService.UpdateAsync(user);
+            return RedirectToAction("Index");
         }
+
 
         // GET: User/Delete/5
         public async Task<IActionResult> Delete(int id)
