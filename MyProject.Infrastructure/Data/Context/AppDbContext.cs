@@ -19,5 +19,7 @@ namespace MyProject.Infrastructure.Data.Context
 
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
+        public DbSet<PatientProfile> PatientProfiles { get; set; }
+        public DbSet<DoctorProfile> DoctorProfiles { get; set; }
     }
 }

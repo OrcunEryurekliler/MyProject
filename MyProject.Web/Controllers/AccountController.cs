@@ -37,7 +37,7 @@ public class AccountController : Controller
         var result = await _signInManager.PasswordSignInAsync(
             m.Email, m.Password, isPersistent: false, lockoutOnFailure: false);
 
-        if (result.Succeeded) return RedirectToAction("User", "Index");
+        if (result.Succeeded) return RedirectToAction( "Index", "User");
 
         ModelState.AddModelError("", "E‑posta veya şifre yanlış.");
         return View(m);
