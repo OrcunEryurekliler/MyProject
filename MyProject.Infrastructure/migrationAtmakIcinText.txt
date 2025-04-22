@@ -1,3 +1,3 @@
 cd C:\Users\oeryurek\source\repos\MyProject
-dotnet ef migrations add ExampleReason --project MyProject.Infrastructure --startup-project MyProject.Web
-dotnet ef database update ExampleReason --project MyProject.Infrastructure --startup-project MyProject.Web
+dotnet ef migrations add PatientAndDoctorEntities --project MyProject.Infrastructure --startup-project MyProject.Web
+dotnet ef database update PatientAndDoctorEntities --project MyProject.Infrastructure --startup-project MyProject.Web

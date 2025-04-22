@@ -51,7 +51,11 @@ namespace MyProject.Core.Models
         public MaritalStatus MaritalStatus { get; set; }
 
         // Yaş, doğum tarihinden hesaplanabilir
-        public int Age => DateTime.Today.Year - DateOfBirth.Year - 
+        public int Age => DateTime.Today.Year - DateOfBirth.Year -
                           (DateTime.Today.DayOfYear < DateOfBirth.DayOfYear ? 1 : 0);
+        public DoctorProfile DoctorProfile { get; set; }
+        public PatientProfile PatientProfile { get; set; }
+
+
     }
 }

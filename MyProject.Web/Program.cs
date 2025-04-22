@@ -25,12 +25,13 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.ExpireTimeSpan = TimeSpan.FromMinutes(15);
     options.SlidingExpiration = true; // Her istekle süreyi uzatýr
 });
-builder.Services.AddDefaultIdentity<User>(options =>
+builder.Services.AddIdentity<User, Role>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
 })
-.AddRoles<IdentityRole<int>>()                     // Eðer rollerle çalýþacaksanýz
 .AddEntityFrameworkStores<AppDbContext>();
+
+
 builder.Services.AddMvc(options =>
 {
     options.Filters.Add(new AuthorizeFilter());

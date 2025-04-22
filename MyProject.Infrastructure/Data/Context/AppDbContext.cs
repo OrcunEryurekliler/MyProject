@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace MyProject.Infrastructure.Data.Context
 {
-    public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
+    public class AppDbContext : IdentityDbContext<User, Role, int>
     {
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
