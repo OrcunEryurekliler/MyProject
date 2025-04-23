@@ -1,11 +1,14 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
+using MyProject.Application.Interfaces;
+using MyProject.Application.Services.Generic;
+using MyProject.Application.Services.Specific;
 using MyProject.Core.Entities;
 using MyProject.Core.Interfaces;
 using MyProject.Infrastructure.Data;
 using MyProject.Infrastructure.Data.Repositories.Generic;
-using MyProject.Services.Implementations;
+using MyProject.Infrastructure.Data.Repositories.Specific;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +18,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         sqlOptions => sqlOptions.MigrationsAssembly("MyProject.Infrastructure")));
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped(typeof(IService<>), typeof(Service<>));
+builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 
 builder.Services.AddControllersWithViews();
 builder.Services.ConfigureApplicationCookie(options =>

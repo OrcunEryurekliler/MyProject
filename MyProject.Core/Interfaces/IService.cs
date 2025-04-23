@@ -11,8 +11,8 @@ namespace MyProject.Core.Interfaces
         Task<T> GetAsync(int i);
         Task<IEnumerable<T>> GetAllAsync();
         Task AddAsync(T entity);
-        Task Delete(int i);
-        Task Update(T entity);
+        Task DeleteAsync(int i);
+        Task UpdateAsync(T entity);
 
     }
 }

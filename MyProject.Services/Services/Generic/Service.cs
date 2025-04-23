@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 using MyProject.Core.Interfaces;
 using MyProject.Infrastructure.Data.Repositories.Generic;
 
-namespace MyProject.Services.Implementations
+namespace MyProject.Application.Services.Generic
 {
     public class Service<T> : IService<T> where T : class
     {
-        protected readonly IRepository<T> _repository;
-        public Service(Repository<T> repository)
+        public readonly IRepository<T> _repository;
+        public Service(IRepository<T> repository)
         {
             _repository = repository;
         }
@@ -20,7 +20,7 @@ namespace MyProject.Services.Implementations
             await _repository.AddAsync(entity);
         }
 
-        public async Task Delete(int i)
+        public async Task DeleteAsync(int i)
         {
             var entity = await _repository.GetAsync(i);
             _repository.DeleteAsync(entity);
@@ -37,7 +37,7 @@ namespace MyProject.Services.Implementations
            return await _repository.GetAsync(i);
         }
 
-        public async Task Update(T entity)
+        public async Task UpdateAsync(T entity)
         {
              _repository.UpdateAsync(entity);
             await _repository.SaveChangesAsync();

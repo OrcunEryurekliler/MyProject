@@ -21,5 +21,6 @@ namespace MyProject.Core.Entities
 
         // Hasta'ya özel alanlar
         public string BloodType { get; set; }
+        public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
     }
 }

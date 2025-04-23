@@ -15,5 +15,13 @@ namespace MyProject.Infrastructure.Data
         public DbSet<User> Users { get; set; }
         public DbSet<PatientProfile> PatientProfiles { get; set; }
         public DbSet<DoctorProfile> DoctorProfiles { get; set; }
+        public DbSet<Appointment> Appointments { get; set; }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // Configurations klasöründeki tüm IEntityTypeConfiguration<> sınıflarını uygula
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+        }
     }
 }

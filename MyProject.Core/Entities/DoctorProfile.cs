@@ -20,6 +20,7 @@ namespace MyProject.Core.Entities
         public virtual User User { get; set; }
         public string Specialty { get; set; }
         public string DiplomaNumber { get; set; }
+        public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
     }
 
 }

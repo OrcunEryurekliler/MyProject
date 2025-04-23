@@ -24,7 +24,7 @@ namespace MyProject.Web.Controllers
         {
             if (User.Identity?.IsAuthenticated == true)
             {
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Index", "Appointment");
             }
 
             return View();
@@ -40,7 +40,7 @@ namespace MyProject.Web.Controllers
             var result = await _signInManager.PasswordSignInAsync(
                 m.Email, m.Password, isPersistent: false, lockoutOnFailure: false);
 
-            if (result.Succeeded) return RedirectToAction("Index", "User");
+            if (result.Succeeded) return RedirectToAction("Index", "Appointment");
 
             ModelState.AddModelError("", "E‑posta veya şifre yanlış.");
             return View(m);

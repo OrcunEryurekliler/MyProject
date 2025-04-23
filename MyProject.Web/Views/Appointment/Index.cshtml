@@ -1,0 +1,73 @@
+﻿@model IEnumerable<MyProject.Web.ViewModels.AppointmentViewModel>
+
+@{
+    ViewData["Title"] = "Randevu Listesi";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>@ViewData["Title"]</h2>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Yeni Randevu
+        </a>
+    </div>
+
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Başlangıç</th>
+                <th scope="col">Bitiş</th>
+                <th scope="col">Doktor</th>
+                <th scope="col">Hasta</th>
+                <th scope="col" class="text-center">Durum</th>
+                <th scope="col" class="text-end">İşlemler</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model?.Any() ?? false)
+            {
+                foreach (var item in Model)
+                {
+                    <tr>
+                        <th scope="row">@item.Id</th>
+                        <td>@item.StartTime.ToString("g")</td>
+                        <td>@item.EndTime.ToString("g")</td>
+                        <td>@item.DoctorFullName</td>
+                        <td>@item.PatientFullName</td>
+                        <td class="text-center">
+                            <span class="badge
+                            @(item.Status == "Onaylandı" ? "bg-success" :
+                              item.Status == "Beklemede"   ? "bg-warning text-dark" :
+                                                               "bg-danger")">
+                                @item.Status
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info me-1">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning me-1">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Bu randevuyu silmek istediğinize emin misiniz?');">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="7" class="text-center py-4">
+                        Henüz hiç randevu bulunmamaktadır.
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
