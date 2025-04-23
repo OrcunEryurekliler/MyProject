@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyProject.Core.Models;
+using MyProject.Core.Enums;
+using MyProject.Core.Entities;
 
 namespace MyProject.Web.ViewModels
 {
@@ -36,7 +37,6 @@ namespace MyProject.Web.ViewModels
 
         [Required(ErrorMessage = "Medeni hal zorunludur")]
         public MaritalStatus MaritalStatus { get; set; }
-
         
     }
 }

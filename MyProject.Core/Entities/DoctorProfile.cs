@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MyProject.Core.Models
+namespace MyProject.Core.Entities
 {
     public class DoctorProfile
     {
@@ -20,8 +20,6 @@ namespace MyProject.Core.Models
         public virtual User User { get; set; }
         public string Specialty { get; set; }
         public string DiplomaNumber { get; set; }
-
-        // Doktor'a özel ilişkiler (örn. Randevular)
     }
 
 }

@@ -10,12 +10,13 @@ namespace MyProject.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_AspNetUsers_Roles_RoleId",
+            migrationBuilder.DropIndex(
+                name: "IX_AspNetUsers_RoleId",
                 table: "AspNetUsers");
 
-            migrationBuilder.DropTable(
-                name: "Roles");
+            migrationBuilder.DropColumn(
+                name: "RoleId",
+                table: "AspNetUsers");
 
             migrationBuilder.AlterColumn<string>(
                 name: "Name",
@@ -52,18 +53,6 @@ namespace MyProject.Infrastructure.Migrations
                 oldClrType: typeof(string),
                 oldType: "nvarchar(128)",
                 oldMaxLength: 128);
-
-            migrationBuilder.AlterColumn<string>(
-                name: "Name",
-                table: "AspNetRoles",
-                type: "nvarchar(256)",
-                maxLength: 256,
-                nullable: false,
-                defaultValue: "",
-                oldClrType: typeof(string),
-                oldType: "nvarchar(256)",
-                oldMaxLength: 256,
-                oldNullable: true);
 
             migrationBuilder.CreateTable(
                 name: "DoctorProfiles",
@@ -117,23 +106,11 @@ namespace MyProject.Infrastructure.Migrations
                 table: "PatientProfiles",
                 column: "UserId",
                 unique: true);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_AspNetUsers_AspNetRoles_RoleId",
-                table: "AspNetUsers",
-                column: "RoleId",
-                principalTable: "AspNetRoles",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_AspNetUsers_AspNetRoles_RoleId",
-                table: "AspNetUsers");
-
             migrationBuilder.DropTable(
                 name: "DoctorProfiles");
 
@@ -158,6 +135,13 @@ namespace MyProject.Infrastructure.Migrations
                 oldClrType: typeof(string),
                 oldType: "nvarchar(450)");
 
+            migrationBuilder.AddColumn<int>(
+                name: "RoleId",
+                table: "AspNetUsers",
+                type: "int",
+                nullable: false,
+                defaultValue: 0);
+
             migrationBuilder.AlterColumn<string>(
                 name: "ProviderKey",
                 table: "AspNetUserLogins",
@@ -176,16 +160,6 @@ namespace MyProject.Infrastructure.Migrations
                 oldClrType: typeof(string),
                 oldType: "nvarchar(450)");
 
-            migrationBuilder.AlterColumn<string>(
-                name: "Name",
-                table: "AspNetRoles",
-                type: "nvarchar(256)",
-                maxLength: 256,
-                nullable: true,
-                oldClrType: typeof(string),
-                oldType: "nvarchar(256)",
-                oldMaxLength: 256);
-
             migrationBuilder.CreateTable(
                 name: "Roles",
                 columns: table => new
@@ -198,6 +172,11 @@ namespace MyProject.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_Roles", x => x.Id);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_RoleId",
+                table: "AspNetUsers",
+                column: "RoleId");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_AspNetUsers_Roles_RoleId",

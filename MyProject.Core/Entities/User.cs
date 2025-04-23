@@ -1,24 +1,11 @@
 ﻿using System;
+using MyProject.Core.Enums;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
 
-namespace MyProject.Core.Models
+namespace MyProject.Core.Entities
 {
-    public enum Gender
-    {
-        Erkek,
-        Kadın,
-        Diğer
-    }
-
-    public enum MaritalStatus
-    {
-        Bekar,
-        Evli,
-        Boşanmış,
-        Dul
-    }
-
+     
     public class User : IdentityUser<int>
     {
         [Required(ErrorMessage = "T.C. Kimlik Numarası zorunludur")]
@@ -37,8 +24,6 @@ namespace MyProject.Core.Models
         [StringLength(11, MinimumLength = 11, ErrorMessage = "Cep telefonu 11 haneli olmalıdır")]
         [RegularExpression(@"^05\d{9}$", ErrorMessage = "Cep telefonu 05 ile başlamalı ve 11 hane olmalı")]
         public string Cellphone { get; set; }
-        public int RoleId { get; set; }
-        public Role Role { get; set; }
 
         [Required(ErrorMessage = "Doğum tarihi gereklidir.")]
         [DataType(DataType.Date)]
