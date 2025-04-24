@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace MyProject.Web.ViewModels.AppointmentDTO
+namespace MyProject.Web.ViewModels.AppointmentViewModels
 {
     public class CreateAppointmentDto
     {
