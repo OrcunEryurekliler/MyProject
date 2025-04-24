@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using MyProject.Core.Entities;
-using MyProject.Web.ViewModels;
+using MyProject.Web.ViewModels.AccountViewModels;
 
 namespace MyProject.Web.Controllers
 {

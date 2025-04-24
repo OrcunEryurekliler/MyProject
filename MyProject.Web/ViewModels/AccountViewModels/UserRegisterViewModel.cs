@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using MyProject.Core.Enums;
 using MyProject.Core.Entities;
 
-namespace MyProject.Web.ViewModels
+namespace MyProject.Web.ViewModels.AccountViewModels
 {
     public class UserRegisterViewModel
     {

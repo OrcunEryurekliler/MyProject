@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using MyProject.Application.Interfaces;
 using MyProject.Core.Entities;
-using MyProject.Web.ViewModels;
+using MyProject.Web.ViewModels.AppointmentViewModels;
 using System.Security.Claims;
 
 namespace MyProject.Web.Controllers

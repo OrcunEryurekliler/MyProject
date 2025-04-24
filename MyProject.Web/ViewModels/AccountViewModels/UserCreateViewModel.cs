@@ -1,11 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace MyProject.Web.ViewModels
+namespace MyProject.Web.ViewModels.AccountViewModels
 {
-    public class UserEditViewModel
+    public class UserCreateViewModel
     {
-        public int Id { get; set; }
-
         [Required(ErrorMessage = "İsim boş bırakılamaz")]
         public string Name { get; set; } = string.Empty;
 
@@ -28,8 +26,7 @@ namespace MyProject.Web.ViewModels
         [Required(ErrorMessage = "T.C. Kimlik Numarası zorunludur")]
         [StringLength(11, MinimumLength = 11, ErrorMessage = "T.C. Kimlik Numarası 11 haneli olmalıdır")]
         [RegularExpression(@"^\d{11}$", ErrorMessage = "T.C. Kimlik Numarası sadece rakamlardan oluşmalı ve 11 hane olmalı")]
-        public string TCKN { get; set; } = string.Empty;
-
-        public int RoleId { get; set; }
+        public required string TCKN { get; set; }
+        public int RoleId { get; set; } = 1; // Default olarak 1 (örneğin "Hasta")
     }
 }

@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-namespace MyProject.Web.ViewModels
+namespace MyProject.Web.ViewModels.AccountViewModels
 {
     public class UserLoginViewModel
     {

@@ -7,8 +7,10 @@ using MyProject.Application.Services.Specific;
 using MyProject.Core.Entities;
 using MyProject.Core.Interfaces;
 using MyProject.Infrastructure.Data;
+using MyProject.Infrastructure.Data.Seed;
 using MyProject.Infrastructure.Data.Repositories.Generic;
 using MyProject.Infrastructure.Data.Repositories.Specific;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,31 +22,38 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped(typeof(IService<>), typeof(Service<>));
 builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
-
 builder.Services.AddControllersWithViews();
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.ExpireTimeSpan = TimeSpan.FromMinutes(15);
     options.SlidingExpiration = true; // Her istekle süreyi uzatýr
 });
+
 builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
 })
 .AddEntityFrameworkStores<AppDbContext>();
 
-
 builder.Services.AddMvc(options =>
 {
     options.Filters.Add(new AuthorizeFilter());
 });
+
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login"; // Giriþ sayfanýzýn yolu
 });
 
 var app = builder.Build();
-
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    // Roller oluþtur
+    await IdentitySeed.SeedRolesAsync(services);
+    // Ýsteðe baðlý: Admin kullanýcýsý oluþtur
+    await IdentitySeed.SeedAdminUserAsync(services);
+}
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
