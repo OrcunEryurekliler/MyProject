@@ -10,7 +10,7 @@ using MyProject.Infrastructure.Data;
 using MyProject.Infrastructure.Data.Seed;
 using MyProject.Infrastructure.Data.Repositories.Generic;
 using MyProject.Infrastructure.Data.Repositories.Specific;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using MyProject.Application.Mappings;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,6 +44,9 @@ builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login"; // Giriþ sayfanýzýn yolu
 });
+// DTO Mapping Ayarlarý
+builder.Services.AddAutoMapper(typeof(AppointmentProfile).Assembly);
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())

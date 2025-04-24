@@ -2,7 +2,7 @@
 
 namespace MyProject.Web.ViewModels.AppointmentViewModels
 {
-    public class AppointmentViewModel
+    public class AppointmentDto
     {
         // — Temel Kimlik —
         public int Id { get; set; }

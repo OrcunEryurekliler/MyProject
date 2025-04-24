@@ -41,7 +41,7 @@ namespace MyProject.Web.Controllers
                 entities = await _appointmentService.GetAllAsync();
 
             // 3) Entity → ViewModel map
-            var vms = entities.Select(a => new AppointmentViewModel
+            var vms = entities.Select(a => new AppointmentDto
             {
                 Id = a.Id,
                 StartTime = a.StartTime,
@@ -62,7 +62,7 @@ namespace MyProject.Web.Controllers
             var a = await _appointmentService.GetAsync(id);
             if (a == null) return NotFound();
 
-            var vm = new AppointmentViewModel
+            var vm = new AppointmentDto
             {
                 Id = a.Id,
                 StartTime = a.StartTime,
@@ -81,7 +81,7 @@ namespace MyProject.Web.Controllers
         public IActionResult Create()
         {
             // Eğer dropdown’lar lazımsa ek veri aktarabilirsin (ör. TempData, ViewBag)
-            return View(new AppointmentViewModel
+            return View(new AppointmentDto
             {
                 StartTime = DateTime.Now,
                 EndTime = DateTime.Now.AddMinutes(30),
@@ -92,7 +92,7 @@ namespace MyProject.Web.Controllers
         // POST: /Appointment/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(AppointmentViewModel vm)
+        public async Task<IActionResult> Create(AppointmentDto vm)
         {
             if (!ModelState.IsValid) return View(vm);
 
@@ -117,7 +117,7 @@ namespace MyProject.Web.Controllers
             var a = await _appointmentService.GetAsync(id);
             if (a == null) return NotFound();
 
-            var vm = new AppointmentViewModel
+            var vm = new AppointmentDto
             {
                 Id = a.Id,
                 StartTime = a.StartTime,
@@ -134,7 +134,7 @@ namespace MyProject.Web.Controllers
         // POST: /Appointment/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, AppointmentViewModel vm)
+        public async Task<IActionResult> Edit(int id, AppointmentDto vm)
         {
             if (id != vm.Id) return BadRequest();
             if (!ModelState.IsValid) return View(vm);
@@ -160,7 +160,7 @@ namespace MyProject.Web.Controllers
             var a = await _appointmentService.GetAsync(id);
             if (a == null) return NotFound();
 
-            var vm = new AppointmentViewModel
+            var vm = new AppointmentDto
             {
                 Id = a.Id,
                 StartTime = a.StartTime,
