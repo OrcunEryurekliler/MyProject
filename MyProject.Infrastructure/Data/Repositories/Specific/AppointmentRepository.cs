@@ -20,7 +20,7 @@ namespace MyProject.Infrastructure.Data.Repositories.Specific
 
         public async Task<IEnumerable<Appointment>> GetAllAsyncByDoctor(int id)
         {
-            return await _dbContext.Set<Appointment>()
+            return await _dbContext.Appointments
                                    .Include(a => a.PatientProfile)
                                    .Include(a => a.DoctorProfile)
                                    .Where(a => a.DoctorProfileId == id)
@@ -29,11 +29,20 @@ namespace MyProject.Infrastructure.Data.Repositories.Specific
 
         public async Task<IEnumerable<Appointment>> GetAllAsyncByPatient(int id)
         {
-            return await _dbContext.Set<Appointment>()
+            return await _dbContext.Appointments
                                    .Include(a => a.PatientProfile)
                                    .Include(a => a.DoctorProfile)
                                    .Where(a => a.PatientProfileId == id)
                                    .ToListAsync();
         }
+
+        public async Task<List<TimeSpan>> GetTakenSlotsAsync(int doctorId, DateTime date)
+        {
+            return await _dbContext.Appointments
+                .Where(x => x.DoctorProfileId == doctorId && x.StartTime.Date == date.Date)
+                .Select(x => x.StartTime.TimeOfDay)
+                .ToListAsync();
+        }
+
     }
 }

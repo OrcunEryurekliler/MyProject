@@ -20,6 +20,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         sqlOptions => sqlOptions.MigrationsAssembly("MyProject.Infrastructure")));
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped(typeof(IService<>), typeof(Service<>));
+builder.Services.AddScoped<IDoctorUnavailabilityRepository, IDoctorUnavailabilityRepository>();
+builder.Services.AddScoped<IDoctorUnavailabilityService, DoctorUnavailabilityService>();
+builder.Services.AddScoped<IDoctorProfileRepository, DoctorProfileRepository>();
+builder.Services.AddScoped<IDoctorProfileService, DoctorProfileService>();
 builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddControllersWithViews();

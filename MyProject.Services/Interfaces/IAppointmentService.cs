@@ -15,7 +15,8 @@ namespace MyProject.Application.Interfaces
         Task<IEnumerable<Appointment>> GetAllAsyncByDoctor(int Id);
         Task<IEnumerable<AppointmentDto>> GetAllByPatientDtoAsync(int patientId);
         Task<IEnumerable<AppointmentDto>> GetAllByDoctorDtoAsync(int doctorId);
-        Task<AppointmentDto> GetDtoAsync(int id);
-        Task<AppointmentDto> CreateDtoAsync(CreateAppointmentDto dto, int patientId);
+        Task<AppointmentDto> CreateAppointmentDtoAsync(CreateAppointmentDto dto, int patientId);
+        Task<IEnumerable<TimeSpan>> GetAvailableTimeSlotsAsync(int doctorId, DateTime date);
+
     }
 }

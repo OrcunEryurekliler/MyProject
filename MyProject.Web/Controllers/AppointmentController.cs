@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using MyProject.Application.Interfaces;
 using MyProject.Core.Entities;
+using MyProject.Core.Enums;
 using MyProject.Web.ViewModels.AppointmentViewModels;
 using System.Security.Claims;
 
@@ -12,14 +13,20 @@ namespace MyProject.Web.Controllers
     public class AppointmentController : Controller
     {
         private readonly IAppointmentService _appointmentService;
+        private readonly IDoctorProfileService _doctorProfileService;
+        private readonly IDoctorUnavailabilityService _doctorUnavailabilityService;
         private readonly UserManager<User> _userManager;
 
         public AppointmentController(
             IAppointmentService appointmentService,
+            IDoctorProfileService profileService,
+            IDoctorUnavailabilityService doctorUnavailabilityService,
             UserManager<User> userManager)
         {
             _appointmentService = appointmentService;
+            _doctorProfileService = profileService;
             _userManager = userManager;
+            _doctorUnavailabilityService = doctorUnavailabilityService;
         }
 
         // GET: /Appointment
@@ -75,6 +82,37 @@ namespace MyProject.Web.Controllers
             };
             return View(vm);
         }
+
+        [HttpGet("available-doctors")]
+        public async Task<IActionResult> GetAvailableDoctors([FromQuery] Specialization specialization, [FromQuery] DateTime date)
+        {
+            var startDate = date.Date;
+            var endDate = startDate.AddDays(1); // Sadece o günü arıyoruz
+
+            var availableDoctorIds = await _doctorUnavailabilityService
+                .GetAvailableDoctorIdsBySpecializationAsync(specialization, startDate, endDate);
+
+            if (!availableDoctorIds.Any())
+                return NotFound("Seçtiğiniz tarihte bu branşa ait uygun doktor bulunamadı.");
+
+            var doctors = await _doctorProfileService
+                .GetByIdsAsync(availableDoctorIds);
+
+            return Ok(doctors);
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         // GET: /Appointment/Create
         [HttpGet]

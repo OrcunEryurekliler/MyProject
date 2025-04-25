@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MyProject.Core.Enums;
 
 namespace MyProject.Core.Entities
 {
@@ -18,7 +19,7 @@ namespace MyProject.Core.Entities
 
         [ForeignKey(nameof(UserId))]
         public virtual User User { get; set; }
-        public string Specialty { get; set; }
+        public Specialization Specialization {  get; set; }
         public string DiplomaNumber { get; set; }
         public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
     }

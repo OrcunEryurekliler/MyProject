@@ -10,5 +10,8 @@ namespace MyProject.Application.DTOs
         public DateTime EndTime { get; set; }
         [Required]
         public int DoctorProfileId { get; set; }
+        public int DurationMinutes { get; set; } = 30;
+        public string? Status { get; set; }
+
     }
 }

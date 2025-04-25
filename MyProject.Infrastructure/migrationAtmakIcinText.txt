@@ -1,4 +1,4 @@
 cd C:\Users\oeryurek\source\repos\MyProject
-dotnet ef migrations add AddProfileAppointmentNavs --project MyProject.Infrastructure --startup-project MyProject.Web
-dotnet ef database update AddProfileAppointmentNavs --project MyProject.Infrastructure --startup-project MyProject.Web
+dotnet ef migrations add AddDoctorUnavailability --project MyProject.Infrastructure --startup-project MyProject.Web
+dotnet ef database update AddDoctorUnavailability --project MyProject.Infrastructure --startup-project MyProject.Web
 remove-migration "Silinecek Migration"
