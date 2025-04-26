@@ -8,7 +8,7 @@ public class DoctorProfileService : Service<DoctorProfile> , IDoctorProfileServi
 {
     private readonly IDoctorProfileRepository _repository;
 
-    public DoctorProfileService(IDoctorProfileRepository repository) : base(repository)
+    public DoctorProfileService(IDoctorProfileRepository repository)
     {
         _repository = repository;
     }

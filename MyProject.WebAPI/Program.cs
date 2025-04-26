@@ -30,6 +30,9 @@ builder.Services.AddScoped<IDoctorProfileRepository, DoctorProfileRepository>();
 builder.Services.AddScoped<IDoctorProfileService, DoctorProfileService>();
 builder.Services.AddScoped<IDoctorUnavailabilityRepository, DoctorUnavailabilityRepository>();
 builder.Services.AddScoped<IDoctorUnavailabilityService, DoctorUnavailabilityService>();
+builder.Services.AddScoped<IPatientProfileRepository, PatientProfileRepository>();
+builder.Services.AddScoped<IPatientProfileService, PatientProfileService>();
+
 
 // AutoMapper
 builder.Services.AddAutoMapper(typeof(AppointmentProfile).Assembly);

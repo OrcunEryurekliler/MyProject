@@ -55,10 +55,10 @@
         docEl.addEventListener('change', loadSlots);
 
         // Doktorları yüklemek için fonksiyon
-        async function loadDoctors() {
+                async function loadDoctors() {
             const spec = specEl.value, date = dateEl.value;
-            console.log(`Branş: ${spec}, Tarih: ${date}`);  // Branş ve tarih değerlerini kontrol et
-            slotEl.innerHTML = '<option>-- Önce Doktor Seçin --</option>';
+            console.log(`Branş: ${spec}, Tarih: ${date}`);
+            slotEl.innerHTML = '<option value="">-- Doktor Seçin --</option>';
             if (!spec || !date) {
                 console.log('Branş veya tarih seçilmedi!');
                 return;
@@ -68,17 +68,18 @@
                 const res = await fetch(`/api/appointment/available-doctors?specialization=${spec}&date=${date}`);
                 if (!res.ok) throw new Error('Doktorlar alınırken bir hata oluştu');
                 const doctors = await res.json();
-                console.log('Doktorlar:', doctors);  // Gelen doktor verisini kontrol et
+                console.log('Doktorlar:', doctors);
 
                 docEl.innerHTML = '<option value="">-- Doktor Seçin --</option>';
                 doctors.forEach(d => {
-                    console.log(`Doktor: ${d.user.name} (${d.id})`);  // Her doktorun ismini yazdır
-                    docEl.innerHTML += `<option value="${d.id}">${d.user.name}</option>`;
+                    console.log(`Doktor: ${d.fullName} (${d.id})`);
+                    docEl.innerHTML += `<option value="${d.id}">${d.fullName}</option>`;
                 });
             } catch (error) {
                 console.error('Hata:', error);
             }
         }
+
 
         // Saatleri yüklemek için fonksiyon
         async function loadSlots() {

@@ -118,7 +118,7 @@ namespace MyProject.Web.Controllers
             };
 
             await _api.CreateAsync(dto);
-            return RedirectToAction(nameof(Book)); // veya Index
+            return RedirectToAction("Index", "Appointment"); // veya Index
         }
 
     }

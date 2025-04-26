@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.OpenApi.Extensions;
 using MyProject.Application.DTOs;
 using MyProject.Application.Interfaces;
 using MyProject.Core.Entities;
 using MyProject.Core.Enums;
+using MyProject.WebAPI.DTO;
 using Newtonsoft.Json;
 
 namespace MyProject.WebAPI.Controllers
@@ -43,12 +45,13 @@ namespace MyProject.WebAPI.Controllers
             try
             {
                 var doctors = await _appointmentService.GetAvailableDoctorsAsync(specialization, date);
-                var doctorsJson = JsonConvert.SerializeObject(doctors, new JsonSerializerSettings
+                var doctorDtos = doctors.Select(d => new AvailableDoctorDto
                 {
-                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-                });
-                Console.WriteLine(doctorsJson);
-                return Ok(doctors);
+                    Id = d.Id,
+                    FullName = d.User.Name, // Mesela User üzerinden geliyor
+                    SpecializationName = d.Specialization.ToString()
+                }).ToList();
+                return Ok(doctorDtos);
             }
             catch (Exception ex)
             {

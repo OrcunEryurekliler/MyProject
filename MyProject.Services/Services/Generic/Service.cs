@@ -20,6 +20,7 @@ namespace MyProject.Application.Services.Generic
             try 
             { 
             await _repository.AddAsync(entity);
+            await _repository.SaveChangesAsync();
             return true;
             }
             catch
