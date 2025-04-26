@@ -15,9 +15,15 @@ namespace MyProject.Application.Services.Generic
         {
             _repository = repository;
         }
-        public async Task AddAsync(T entity)
+        public async Task<bool> AddAsync(T entity)
         {
+            try 
+            { 
             await _repository.AddAsync(entity);
+            return true;
+            }
+            catch
+            { return false; }
         }
 
         public async Task DeleteAsync(int i)

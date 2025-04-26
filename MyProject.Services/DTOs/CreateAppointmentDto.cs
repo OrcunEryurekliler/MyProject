@@ -1,17 +1,17 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿    using System.ComponentModel.DataAnnotations;
 
-namespace MyProject.Application.DTOs
-{
-    public class CreateAppointmentDto
+    namespace MyProject.Application.DTOs
     {
-        [Required]
-        public DateTime StartTime { get; set; }
-        [Required]
-        public DateTime EndTime { get; set; }
-        [Required]
-        public int DoctorProfileId { get; set; }
-        public int DurationMinutes { get; set; } = 30;
-        public string? Status { get; set; }
+        public class CreateAppointmentDto
+        {
+            [Required]
+            public DateTime StartTime { get; set; }
+            [Required]
+            public DateTime EndTime { get; set; }
+            [Required]
+            public int DoctorProfileId { get; set; }
+            public int DurationMinutes { get; set; } = 30;
+            public string? Status { get; set; }
 
+        }
     }
-}
