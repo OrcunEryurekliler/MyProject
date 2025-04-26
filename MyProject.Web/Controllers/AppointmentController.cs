@@ -82,6 +82,7 @@ namespace MyProject.Web.Controllers
             return View(vm);
         }
 
+        
         public IActionResult Book()
         {
             ViewBag.Specializations = Enum.GetValues(typeof(Specialization))
@@ -97,6 +98,9 @@ namespace MyProject.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Book(AppointmentBookingViewModel vm)
         {
+            var user = await _userManager.GetUserAsync(User);
+            var patientProfileId = user.PatientProfile?.Id ?? 0; // Güvenli okuma
+
             if (!ModelState.IsValid)
             {
                 ViewBag.Specializations = Enum.GetValues(typeof(Specialization))
@@ -108,7 +112,9 @@ namespace MyProject.Web.Controllers
             {
                 DoctorProfileId = vm.DoctorProfileId,
                 StartTime = vm.Date.Date + vm.TimeSlot,
-                DurationMinutes = vm.DurationMinutes
+                DurationMinutes = vm.DurationMinutes,
+                PatientProfileId = patientProfileId
+                
             };
 
             await _api.CreateAsync(dto);

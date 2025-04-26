@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using MyProject.Core.Entities;
 using MyProject.Core.Interfaces;
 using MyProject.Application.DTOs;
+using MyProject.Core.Enums;
 
 namespace MyProject.Application.Interfaces
 {
@@ -14,5 +15,9 @@ namespace MyProject.Application.Interfaces
         Task<IEnumerable<Appointment>> GetAllAsyncByPatient(int Id);
         Task<IEnumerable<Appointment>> GetAllAsyncByDoctor(int Id);
         Task<IEnumerable<AppointmentDto>> GetAllByDoctorAndDateAsync(int doctorId, DateTime date);
+        //Randevu alma ekranı için gereki olanlar
+        Task<IEnumerable<DoctorProfile>> GetAvailableDoctorsAsync(Specialization specialization, DateTime date);
+        Task<IEnumerable<TimeSpan>> GetAvailableTimeslotsAsync(int doctorId, DateTime date);
+
     }
 }

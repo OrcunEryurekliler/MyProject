@@ -2,6 +2,8 @@
 using MyProject.Application.DTOs;
 using MyProject.Application.Interfaces;
 using MyProject.Core.Entities;
+using MyProject.Core.Enums;
+using Newtonsoft.Json;
 
 namespace MyProject.WebAPI.Controllers
 {
@@ -34,6 +36,37 @@ namespace MyProject.WebAPI.Controllers
             return Ok(appointments);
         }
 
+        // GET: api/appointment/available-doctors?specialization=Cardiology&date=2025-04-26
+        [HttpGet("available-doctors")]
+        public async Task<IActionResult> GetAvailableDoctors([FromQuery] Specialization specialization, [FromQuery] DateTime date)
+        {
+            try
+            {
+                var doctors = await _appointmentService.GetAvailableDoctorsAsync(specialization, date);
+                var doctorsJson = JsonConvert.SerializeObject(doctors, new JsonSerializerSettings
+                {
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                });
+                Console.WriteLine(doctorsJson);
+                return Ok(doctors);
+            }
+            catch (Exception ex)
+            {
+                // Hata mesajını logla
+                Console.WriteLine($"Error occurred while fetching doctors: {ex.Message}");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+
+        // GET: api/appointment/available-timeslots?doctorId=5&date=2025-04-26
+        [HttpGet("available-timeslots")]
+        public async Task<IActionResult> GetAvailableTimeslots([FromQuery] int doctorId, [FromQuery] DateTime date)
+        {
+            var timeslots = await _appointmentService.GetAvailableTimeslotsAsync(doctorId, date);
+            return Ok(timeslots);
+        }
+
 
         [HttpPost("create")]
         public async Task<IActionResult> Create([FromBody] CreateAppointmentDto dto)
@@ -44,9 +77,9 @@ namespace MyProject.WebAPI.Controllers
             var appointment = new Appointment
             {
                 DoctorProfileId = dto.DoctorProfileId,
-                PatientProfileId = 1, // Örnek: Login olan kullanıcıdan alınmalı ileride
+                PatientProfileId = 1, // TODO: Giriş yapan kullanıcıdan al
                 StartTime = dto.StartTime,
-                EndTime = dto.EndTime,
+                EndTime = dto.StartTime.AddMinutes(dto.DurationMinutes), // <-- BURADA
                 Status = dto.Status ?? "Pending"
             };
 
@@ -56,5 +89,6 @@ namespace MyProject.WebAPI.Controllers
 
             return BadRequest(new { message = "Randevu oluşturulamadı." });
         }
+
     }
 }
