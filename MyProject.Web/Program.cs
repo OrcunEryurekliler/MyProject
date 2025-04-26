@@ -20,7 +20,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         sqlOptions => sqlOptions.MigrationsAssembly("MyProject.Infrastructure")));
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped(typeof(IService<>), typeof(Service<>));
-builder.Services.AddScoped<IDoctorUnavailabilityRepository, IDoctorUnavailabilityRepository>();
+builder.Services.AddScoped<IDoctorUnavailabilityRepository, DoctorUnavailabilityRepository>();
 builder.Services.AddScoped<IDoctorUnavailabilityService, DoctorUnavailabilityService>();
 builder.Services.AddScoped<IDoctorProfileRepository, DoctorProfileRepository>();
 builder.Services.AddScoped<IDoctorProfileService, DoctorProfileService>();
@@ -50,7 +50,15 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 // DTO Mapping Ayarlarý
 builder.Services.AddAutoMapper(typeof(AppointmentProfile).Assembly);
+builder.Services.AddAutoMapper(typeof(AppointmentViewProfile).Assembly);
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+// Program.cs içinde, WebUI katmanýnýzda:
+builder.Services
+    .AddHttpClient<IAppointmentApiClient, AppointmentApiClient>(client =>
+    {
+        client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]);
+    });
 
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())

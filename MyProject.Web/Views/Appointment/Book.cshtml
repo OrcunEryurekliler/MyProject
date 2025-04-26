@@ -1,0 +1,89 @@
+﻿@model MyProject.WebUI.ViewModels.AppointmentBookingViewModel
+@using MyProject.Core.Enums
+
+@{
+    ViewData["Title"] = "Randevu Al";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<form asp-action="Book" method="post">
+    <div class="form-group">
+        <label asp-for="Specialization"></label>
+        <select asp-for="Specialization" class="form-control" id="specDropdown">
+            <option value="">-- Branş Seçin --</option>
+            @foreach (var spec in ViewBag.Specializations as IEnumerable<Specialization>)
+            {
+                <option value="@spec">@spec</option>
+            }
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Date"></label>
+        <input asp-for="Date" class="form-control" type="date" id="datePicker" />
+    </div>
+
+    <div class="form-group">
+        <label>Doktor</label>
+        <select asp-for="DoctorProfileId" class="form-control" id="doctorDropdown">
+            <option value="">-- Önce Branş ve Tarih Seçin --</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Saat</label>
+        <select asp-for="TimeSlot" class="form-control" id="timeslotDropdown">
+            <option value="">-- Doktor Seçildikten Sonra Yüklenir --</option>
+        </select>
+    </div>
+
+    <input type="hidden" asp-for="DurationMinutes" />
+
+    <button type="submit" class="btn btn-primary">Randevu Al</button>
+</form>
+
+@section Scripts {
+    <script>
+        const specEl   = document.getElementById('specDropdown');
+        const dateEl   = document.getElementById('datePicker');
+        const docEl    = document.getElementById('doctorDropdown');
+        const slotEl   = document.getElementById('timeslotDropdown');
+
+        specEl.addEventListener('change', loadDoctors);
+        dateEl.addEventListener('change', loadDoctors);
+        docEl.addEventListener('change', loadSlots);
+
+        async function loadDoctors() {
+            const spec = specEl.value, date = dateEl.value;
+            slotEl.innerHTML = '<option>-- Önce Doktor Seçin --</option>';
+            if (!spec || !date) return;
+
+            const res = await fetch(`/api/appointment/available-doctors?specialization=${spec}&date=${date}`);
+            if (!res.ok) return;
+            const doctors = await res.json();
+
+            docEl.innerHTML = '<option value="">-- Doktor Seçin --</option>';
+            doctors.forEach(d => {
+                docEl.innerHTML += `<option value="${d.id}">${d.user.name}</option>`;
+            });
+        }
+
+        async function loadSlots() {
+            const docId = docEl.value, date = dateEl.value;
+            if (!docId || !date) {
+                slotEl.innerHTML = '<option>-- Önce Doktor Seçin --</option>';
+                return;
+            }
+
+            const res = await fetch(`/api/appointment/available-timeslots?doctorId=${docId}&date=${date}`);
+            if (!res.ok) return;
+            const slots = await res.json();
+
+            slotEl.innerHTML = '<option value="">-- Saat Seçin --</option>';
+            slots.forEach(s => {
+                slotEl.innerHTML += `<option value="${s}">${s}</option>`;
+            });
+        }
+    </script>
+}

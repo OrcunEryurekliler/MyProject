@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using MyProject.Application.DTOs;
 using MyProject.Application.Interfaces;
 using MyProject.Core.Entities;
 using MyProject.Core.Enums;
 using MyProject.Web.ViewModels.AppointmentViewModels;
+using MyProject.WebUI.ViewModels;
 using System.Security.Claims;
 
 namespace MyProject.Web.Controllers
@@ -16,17 +19,23 @@ namespace MyProject.Web.Controllers
         private readonly IDoctorProfileService _doctorProfileService;
         private readonly IDoctorUnavailabilityService _doctorUnavailabilityService;
         private readonly UserManager<User> _userManager;
+        private readonly IMapper _mapper;
+        private readonly IAppointmentApiClient _api;
 
-        public AppointmentController(
+        public AppointmentController(            
             IAppointmentService appointmentService,
             IDoctorProfileService profileService,
             IDoctorUnavailabilityService doctorUnavailabilityService,
-            UserManager<User> userManager)
+            UserManager<User> userManager,
+            IMapper mapper,
+        IAppointmentApiClient api)
         {
             _appointmentService = appointmentService;
             _doctorProfileService = profileService;
             _userManager = userManager;
             _doctorUnavailabilityService = doctorUnavailabilityService;
+            _api = api;
+            _mapper = mapper;
         }
 
         // GET: /Appointment
@@ -46,21 +55,11 @@ namespace MyProject.Web.Controllers
                 entities = await _appointmentService.GetAllAsyncByDoctor(userId);
             else
                 entities = await _appointmentService.GetAllAsync();
-
+            var appointmentViewModels = _mapper.Map<IEnumerable<AppointmentViewModel>>(entities);
             // 3) Entity → ViewModel map
-            var vms = entities.Select(a => new AppointmentDto
-            {
-                Id = a.Id,
-                StartTime = a.StartTime,
-                EndTime = a.EndTime,
-                Status = a.Status,
-                DoctorProfileId = a.DoctorProfileId,
-                PatientProfileId = a.PatientProfileId,
-                DoctorFullName = a.DoctorProfile?.User.Name ?? "—",
-                PatientFullName = a.PatientProfile?.User.Name ?? "—"
-            });
+            
 
-            return View(vms);
+            return View(appointmentViewModels);
         }
 
         // GET: /Appointment/Details/5
@@ -83,140 +82,38 @@ namespace MyProject.Web.Controllers
             return View(vm);
         }
 
-        [HttpGet("available-doctors")]
-        public async Task<IActionResult> GetAvailableDoctors([FromQuery] Specialization specialization, [FromQuery] DateTime date)
+        public IActionResult Book()
         {
-            var startDate = date.Date;
-            var endDate = startDate.AddDays(1); // Sadece o günü arıyoruz
-
-            var availableDoctorIds = await _doctorUnavailabilityService
-                .GetAvailableDoctorIdsBySpecializationAsync(specialization, startDate, endDate);
-
-            if (!availableDoctorIds.Any())
-                return NotFound("Seçtiğiniz tarihte bu branşa ait uygun doktor bulunamadı.");
-
-            var doctors = await _doctorProfileService
-                .GetByIdsAsync(availableDoctorIds);
-
-            return Ok(doctors);
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        // GET: /Appointment/Create
-        [HttpGet]
-        public IActionResult Create()
-        {
-            // Eğer dropdown’lar lazımsa ek veri aktarabilirsin (ör. TempData, ViewBag)
-            return View(new AppointmentDto
+            ViewBag.Specializations = Enum.GetValues(typeof(Specialization))
+                                          .Cast<Specialization>();
+            return View(new AppointmentBookingViewModel
             {
-                StartTime = DateTime.Now,
-                EndTime = DateTime.Now.AddMinutes(30),
-                Status = "Beklemede"
+                Date = DateTime.Today
             });
         }
 
-        // POST: /Appointment/Create
+        // POST: Form gönderildiğinde API'ye yönlendir
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(AppointmentDto vm)
+        public async Task<IActionResult> Book(AppointmentBookingViewModel vm)
         {
-            if (!ModelState.IsValid) return View(vm);
-
-            // ViewModel → Entity map
-            var entity = new Appointment
+            if (!ModelState.IsValid)
             {
-                StartTime = vm.StartTime,
-                EndTime = vm.EndTime,
-                Status = vm.Status,
+                ViewBag.Specializations = Enum.GetValues(typeof(Specialization))
+                                              .Cast<Specialization>();
+                return View(vm);
+            }
+
+            var dto = new CreateAppointmentDto
+            {
                 DoctorProfileId = vm.DoctorProfileId,
-                PatientProfileId = vm.PatientProfileId
+                StartTime = vm.Date.Date + vm.TimeSlot,
+                DurationMinutes = vm.DurationMinutes
             };
 
-            await _appointmentService.AddAsync(entity);
-            return RedirectToAction(nameof(Index));
+            await _api.CreateAsync(dto);
+            return RedirectToAction(nameof(Book)); // veya Index
         }
 
-        // GET: /Appointment/Edit/5
-        [HttpGet]
-        public async Task<IActionResult> Edit(int id)
-        {
-            var a = await _appointmentService.GetAsync(id);
-            if (a == null) return NotFound();
-
-            var vm = new AppointmentDto
-            {
-                Id = a.Id,
-                StartTime = a.StartTime,
-                EndTime = a.EndTime,
-                Status = a.Status,
-                DoctorProfileId = a.DoctorProfileId,
-                PatientProfileId = a.PatientProfileId,
-                DoctorFullName = a.DoctorProfile?.User.Name,
-                PatientFullName = a.PatientProfile?.User.Name
-            };
-            return View(vm);
-        }
-
-        // POST: /Appointment/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, AppointmentDto vm)
-        {
-            if (id != vm.Id) return BadRequest();
-            if (!ModelState.IsValid) return View(vm);
-
-            var entity = new Appointment
-            {
-                Id = vm.Id,
-                StartTime = vm.StartTime,
-                EndTime = vm.EndTime,
-                Status = vm.Status,
-                DoctorProfileId = vm.DoctorProfileId,
-                PatientProfileId = vm.PatientProfileId
-            };
-
-            await _appointmentService.UpdateAsync(entity);
-            return RedirectToAction(nameof(Index));
-        }
-
-        // GET: /Appointment/Delete/5
-        [HttpGet]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var a = await _appointmentService.GetAsync(id);
-            if (a == null) return NotFound();
-
-            var vm = new AppointmentDto
-            {
-                Id = a.Id,
-                StartTime = a.StartTime,
-                EndTime = a.EndTime,
-                Status = a.Status,
-                DoctorFullName = a.DoctorProfile?.User.Name,
-                PatientFullName = a.PatientProfile?.User.Name
-            };
-            return View(vm);
-        }
-
-        // POST: /Appointment/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            await _appointmentService.DeleteAsync(id);
-            return RedirectToAction(nameof(Index));
-        }
     }
 }

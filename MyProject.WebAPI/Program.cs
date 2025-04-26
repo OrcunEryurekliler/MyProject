@@ -42,14 +42,15 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+
+
+app.UseHttpsRedirection();
+app.UseAuthorization();
 // Swagger (Sadece Development'da açýk kalsýn)
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-app.UseHttpsRedirection();
-app.UseAuthorization();
 app.MapControllers();
 app.Run();

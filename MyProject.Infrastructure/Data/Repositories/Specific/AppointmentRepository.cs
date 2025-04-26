@@ -36,13 +36,5 @@ namespace MyProject.Infrastructure.Data.Repositories.Specific
                                    .ToListAsync();
         }
 
-        public async Task<List<TimeSpan>> GetTakenSlotsAsync(int doctorId, DateTime date)
-        {
-            return await _dbContext.Appointments
-                .Where(x => x.DoctorProfileId == doctorId && x.StartTime.Date == date.Date)
-                .Select(x => x.StartTime.TimeOfDay)
-                .ToListAsync();
-        }
-
     }
 }

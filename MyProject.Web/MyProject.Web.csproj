@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MyProject.Services\MyProject.Application.csproj" />
+    <ProjectReference Include="..\MyProject.WebAPI\MyProject.WebAPI.csproj" />
   </ItemGroup>
 
 </Project>
