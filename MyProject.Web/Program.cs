@@ -63,7 +63,10 @@ builder.Services
         client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]);
     });
 
+builder.Services.AddSession();
+builder.Services.AddHttpContextAccessor();
 var app = builder.Build();
+
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -87,7 +90,7 @@ app.UseRouting();
 app.UseAuthentication(); // BU SATIRI EKLE
 
 app.UseAuthorization();
-
+app.UseSession();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

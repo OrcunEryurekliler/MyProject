@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MyProject.Core.Enums;
 
 namespace MyProject.Core.Entities
 {
@@ -20,7 +21,7 @@ namespace MyProject.Core.Entities
         public virtual User User { get; set; }
 
         // Hasta'ya özel alanlar
-        public string BloodType { get; set; }
+        public BloodType BloodType { get; set; } = BloodType.OPozitif;
         public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
     }
 }

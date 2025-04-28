@@ -17,13 +17,16 @@ namespace MyProject.Application.Services.Specific
     {
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly IDoctorProfileRepository _doctorProfileRepository;
+        private readonly IPatientProfileService _patientProfileService;
         private readonly IMapper _mapper;
         public AppointmentService(IAppointmentRepository repository,
                                   IDoctorProfileRepository doctorProfileRepository,
+                                  IPatientProfileService patientProfileService,
                                   IMapper mapper) : base(repository)
         {
             _appointmentRepository = repository;
             _doctorProfileRepository = doctorProfileRepository;
+            _patientProfileService = patientProfileService;
             _mapper = mapper;
         }
 
@@ -48,6 +51,8 @@ namespace MyProject.Application.Services.Specific
             return doctors;
         }
 
+
+
         public async Task<IEnumerable<TimeSpan>> GetAvailableTimeslotsAsync(int doctorId, DateTime date)
         {
             // Burada sabah 9-12:30 ve öğlen 13:30-17:30 slot üret
@@ -60,6 +65,12 @@ namespace MyProject.Application.Services.Specific
                 slots.Add(time);
 
             return slots;
+        }
+
+        public async Task<int> GetPatientIdByUserId(int userId)
+        {
+            var user = await _patientProfileService.GetByUserIdAsync(userId);
+            return user.Id;
         }
     }
 }

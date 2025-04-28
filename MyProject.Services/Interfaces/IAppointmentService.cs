@@ -18,6 +18,7 @@ namespace MyProject.Application.Interfaces
         //Randevu alma ekranı için gereki olanlar
         Task<IEnumerable<DoctorProfile>> GetAvailableDoctorsAsync(Specialization specialization, DateTime date);
         Task<IEnumerable<TimeSpan>> GetAvailableTimeslotsAsync(int doctorId, DateTime date);
+        Task<int> GetPatientIdByUserId(int userId);
 
     }
 }

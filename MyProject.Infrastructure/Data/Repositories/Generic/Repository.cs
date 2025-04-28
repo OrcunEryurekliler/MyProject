@@ -49,5 +49,10 @@ namespace MyProject.Infrastructure.Data.Repositories.Generic
         {
             return await _dbContext.Set<T>().Where(predicate).ToListAsync();
         }
+
+        public async Task<T> GetAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await _dbContext.Set<T>().Where(predicate).FirstOrDefaultAsync();
+        }
     }
 }

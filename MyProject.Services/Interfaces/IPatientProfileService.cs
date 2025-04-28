@@ -10,5 +10,6 @@ namespace MyProject.Application.Interfaces
 {
     public interface IPatientProfileService : IService<PatientProfile>
     {
+        Task<PatientProfile> GetByUserIdAsync(int userId);
     }
 }

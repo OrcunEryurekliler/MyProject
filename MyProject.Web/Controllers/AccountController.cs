@@ -1,21 +1,35 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using MyProject.Application.Interfaces;
 using MyProject.Core.Entities;
 using MyProject.Web.ViewModels.AccountViewModels;
+using MyProject.Web.DTO;
+using System.Net;
+using Azure;
 
 namespace MyProject.Web.Controllers
 {
 
     public class AccountController : Controller
     {
+        private readonly HttpClient _httpClient;
+        private readonly IConfiguration _config;
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
+        private readonly IPatientProfileService _patientService;
 
-        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager)
+        public AccountController(IHttpClientFactory clientFactory,
+                                 IConfiguration config,
+                                 UserManager<User> userManager,
+                                 SignInManager<User> signInManager,
+                                 IPatientProfileService patientService)
         {
+            _httpClient = clientFactory.CreateClient("AuthApi");
+            _config = config;
             _userManager = userManager;
             _signInManager = signInManager;
+            _patientService = patientService;
         }
 
         [AllowAnonymous]
@@ -30,21 +44,54 @@ namespace MyProject.Web.Controllers
             return View();
         }
 
+
         [AllowAnonymous]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(UserLoginViewModel m)
+        public async Task<IActionResult> Login(UserLoginViewModel model)
         {
-            if (!ModelState.IsValid) return View(m);
+            if (!ModelState.IsValid)
+                return View(model);
 
-            var result = await _signInManager.PasswordSignInAsync(
-                m.Email, m.Password, isPersistent: false, lockoutOnFailure: false);
+            // API'ye login için DTO oluştur
+            var loginDto = new
+            {
+                Email = model.Email,
+                Password = model.Password
+            };
 
-            if (result.Succeeded) return RedirectToAction("Index", "Appointment");
+            using var client = new HttpClient();
+            // BURAYA API LOGIN URL'İNİ YAZ
+            var response = await _httpClient.PostAsJsonAsync("api/auth/login", loginDto);
 
-            ModelState.AddModelError("", "E‑posta veya şifre yanlış.");
-            return View(m);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    ModelState.AddModelError("", "E-posta veya şifre yanlış.");
+                }
+                else
+                {
+                    ModelState.AddModelError("", "Sunucu hatası oluştu. Lütfen tekrar deneyin.");
+                }
+                return View(model);
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<LoginResultDto>();
+
+            if (result is null || string.IsNullOrEmpty(result.Token))
+            {
+                ModelState.AddModelError("", "Sunucudan geçerli token alınamadı.");
+                return View(model);
+            }
+
+            // TOKEN'I SESSION'A YAZ
+            HttpContext.Session.SetString("Token", result.Token);
+
+            return RedirectToAction("Index", "Appointment");
         }
+
         [AllowAnonymous]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -54,52 +101,5 @@ namespace MyProject.Web.Controllers
             return RedirectToAction("Login");
         }
 
-        // GET: /Account/Register
-        [AllowAnonymous]
-        [HttpGet]
-        public IActionResult Register()
-        {
-            if (User.Identity?.IsAuthenticated == true)
-            {
-                return RedirectToAction("Index", "Home");
-            }
-
-            return View();
-        }
-        [AllowAnonymous]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(UserRegisterViewModel model)
-        {
-            if (ModelState.IsValid)
-            {
-                var user = new User
-                {
-                    UserName = model.Email,
-                    Email = model.Email,
-                    Name = model.Name,
-                    TCKN = model.TCKN,
-                    Cellphone = model.Cellphone,
-                    DateOfBirth = model.DateOfBirth,
-                    Gender = model.Gender,
-                    MaritalStatus = model.MaritalStatus,
-                    // Yaş zaten UserRegisterViewModel'den hesaplanıyor, manuel olarak set edilmesine gerek yok.
-                };
-
-                var result = await _userManager.CreateAsync(user, model.Password);
-
-                if (result.Succeeded)
-                {
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-                    return RedirectToAction("Login", "Account");
-                }
-
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
-            }
-            return View(model);
-        }
     }
 }

@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Extensions;
 using MyProject.Application.DTOs;
 using MyProject.Application.Interfaces;
@@ -71,16 +73,19 @@ namespace MyProject.WebAPI.Controllers
         }
 
 
+        [Authorize]
         [HttpPost("create")]
         public async Task<IActionResult> Create([FromBody] CreateAppointmentDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-
+           
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var patientId = await _appointmentService.GetPatientIdByUserId(userId);
             var appointment = new Appointment
             {
                 DoctorProfileId = dto.DoctorProfileId,
-                PatientProfileId = 1, // TODO: Giriş yapan kullanıcıdan al
+                PatientProfileId = patientId,
                 StartTime = dto.StartTime,
                 EndTime = dto.StartTime.AddMinutes(dto.DurationMinutes), // <-- BURADA
                 Status = dto.Status ?? "Pending"

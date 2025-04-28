@@ -94,6 +94,7 @@ namespace MyProject.Web.Controllers
         }
 
         // POST: Form gönderildiğinde API'ye yönlendir
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Book(AppointmentBookingViewModel vm)
@@ -113,7 +114,6 @@ namespace MyProject.Web.Controllers
                 DoctorProfileId = vm.DoctorProfileId,
                 StartTime = vm.Date.Date + vm.TimeSlot,
                 DurationMinutes = vm.DurationMinutes,
-                PatientProfileId = patientProfileId
                 
             };
 

@@ -1,5 +1,7 @@
+ï»¿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using MyProject.Application.Interfaces;
 using MyProject.Application.Mappings;
 using MyProject.Application.Services.Generic;
@@ -9,6 +11,8 @@ using MyProject.Core.Interfaces;
 using MyProject.Infrastructure.Data;
 using MyProject.Infrastructure.Data.Repositories.Generic;
 using MyProject.Infrastructure.Data.Repositories.Specific;
+using System.Data;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,10 +20,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
     sqlOptions => sqlOptions.MigrationsAssembly("MyProject.Infrastructure")));
-
-// Identity (opsiyonel, eðer API'de de login yapacaksan)
-//builder.Services.AddIdentity<User, IdentityRole<int>>()...
-//    .AddEntityFrameworkStores<AppDbContext>();
 
 // Repos ve Servisler
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
@@ -33,10 +33,41 @@ builder.Services.AddScoped<IDoctorUnavailabilityService, DoctorUnavailabilitySer
 builder.Services.AddScoped<IPatientProfileRepository, PatientProfileRepository>();
 builder.Services.AddScoped<IPatientProfileService, PatientProfileService>();
 
-
 // AutoMapper
 builder.Services.AddAutoMapper(typeof(AppointmentProfile).Assembly);
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+// â‘  Identity servisleri
+builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
+{
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequiredLength = 6;
+    options.SignIn.RequireConfirmedAccount = false;
+})
+.AddEntityFrameworkStores<AppDbContext>()
+.AddDefaultTokenProviders(); ;
+
+// JWT Authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+    };
+});
 
 // Controllers & Swagger
 builder.Services.AddControllers();
@@ -45,15 +76,17 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-
-
+// Middleware sÄ±rasÄ±
 app.UseHttpsRedirection();
+app.UseAuthentication(); // BURADA
 app.UseAuthorization();
-// Swagger (Sadece Development'da açýk kalsýn)
+
+// Swagger (Sadece Development'da aÃ§Ä±k kalsÄ±n)
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
 app.MapControllers();
 app.Run();

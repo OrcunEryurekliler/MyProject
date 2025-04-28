@@ -17,5 +17,10 @@ namespace MyProject.Application.Services.Specific
         {
             _patientProfileRepository = patientProfileRepository;
         }
+
+        public async Task<PatientProfile> GetByUserIdAsync(int userId)
+        {
+            return await _patientProfileRepository.GetAsync(x => x.UserId == userId);
+        }
     }
 }
