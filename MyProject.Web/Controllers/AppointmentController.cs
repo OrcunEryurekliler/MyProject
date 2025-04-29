@@ -12,7 +12,7 @@ using System.Security.Claims;
 
 namespace MyProject.Web.Controllers
 {
-    [Authorize]
+    //[Authorize]
     public class AppointmentController : Controller
     {
         private readonly IAppointmentService _appointmentService;

@@ -63,8 +63,22 @@ builder.Services
         client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]);
     });
 
-builder.Services.AddSession();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // Session süresi
+});
 builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddAuthentication("Cookies")
+    .AddCookie("Cookies", options =>
+    {
+        options.LoginPath = "/Account/Login"; // yanlýþ giriþte buraya yönlendirir
+        options.LogoutPath = "/Account/Logout";
+        options.SlidingExpiration = true;
+
+    });
+
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -87,10 +101,11 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-app.UseAuthentication(); // BU SATIRI EKLE
-
-app.UseAuthorization();
 app.UseSession();
+app.UseAuthentication();
+app.UseAuthorization();
+
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

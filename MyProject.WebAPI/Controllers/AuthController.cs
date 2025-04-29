@@ -1,6 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using MyProject.Core.Entities;
 using MyProject.WebAPI.DTO;
 
@@ -10,14 +14,17 @@ namespace MyProject.WebAPI.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
+        private readonly IConfiguration _config;
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         // ... diğer gerekli servisler
 
         public AuthController(
+            IConfiguration config,
             UserManager<User> userManager,
             SignInManager<User> signInManager /*, ... */)
         {
+            _config = config;
             _userManager = userManager;
             _signInManager = signInManager;
             // ...
@@ -31,7 +38,7 @@ namespace MyProject.WebAPI.Controllers
                 return BadRequest(new { message = "Gönderilen veri boş." });
 
             // 1) E-posta ile user’ı bul
-            var user = await _userManager.FindByEmailAsync(dto.Email);
+            var user = await _userManager.FindByEmailAsync(dto.Email) ?? await _userManager.FindByNameAsync(dto.Email); 
             if (user == null)
                 return Unauthorized(new { message = "E-posta veya şifre yanlış." });
 
@@ -50,9 +57,35 @@ namespace MyProject.WebAPI.Controllers
         // Örnek JWT üretme metodu (sadeleştirildi)
         private string GenerateJwtToken(User user)
         {
-            // burada JwtSecurityTokenHandler ile Claim’leri ayarla,
-            // SigningCredentials kullanarak token’ı üret ve return et
-            throw new NotImplementedException();
+            // 1) Claim’leri oluştur
+            var claims = new List<Claim>
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName),
+            new Claim(JwtRegisteredClaimNames.Email, user.Email),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            // isteğe bağlı roller, vs:
+            // new Claim(ClaimTypes.Role, "Admin")
+        };
+
+            // 2) Security key ve SigningCredentials
+            var key = new SymmetricSecurityKey(
+                              Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            // 3) Token parametreleri
+            var expires = DateTime.UtcNow
+                              .AddMinutes(
+                                double.Parse(_config["Jwt:ExpiresInMinutes"] ?? "60"));
+            var token = new JwtSecurityToken(
+                              issuer: _config["Jwt:Issuer"],
+                              audience: _config["Jwt:Audience"],
+                              claims: claims,
+                              expires: expires,
+                              signingCredentials: creds);
+
+            // 4) Token’ı string hâline getir
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }

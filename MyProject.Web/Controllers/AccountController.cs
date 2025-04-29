@@ -7,6 +7,8 @@ using MyProject.Web.ViewModels.AccountViewModels;
 using MyProject.Web.DTO;
 using System.Net;
 using Azure;
+using Microsoft.AspNetCore.Authentication;
+using System.Security.Claims;
 
 namespace MyProject.Web.Controllers
 {
@@ -36,14 +38,15 @@ namespace MyProject.Web.Controllers
         [HttpGet]
         public IActionResult Login()
         {
+            // Kullanıcının zaten giriş yapıp yapmadığını kontrol et
             if (User.Identity?.IsAuthenticated == true)
             {
+                // Kullanıcı zaten giriş yapmışsa, randevu sayfasına yönlendir
                 return RedirectToAction("Index", "Appointment");
             }
 
             return View();
         }
-
 
         [AllowAnonymous]
         [HttpPost]
@@ -53,17 +56,13 @@ namespace MyProject.Web.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            // API'ye login için DTO oluştur
             var loginDto = new
             {
                 Email = model.Email,
                 Password = model.Password
             };
 
-            using var client = new HttpClient();
-            // BURAYA API LOGIN URL'İNİ YAZ
-            var response = await _httpClient.PostAsJsonAsync("api/auth/login", loginDto);
-
+            var response = await _httpClient.PostAsJsonAsync("https://localhost:7271/api/auth/login", loginDto);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -89,8 +88,21 @@ namespace MyProject.Web.Controllers
             // TOKEN'I SESSION'A YAZ
             HttpContext.Session.SetString("Token", result.Token);
 
+            // KULLANICIYI LOGIN YAP
+            var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.Name, model.Email),
+        new Claim("AccessToken", result.Token)
+    };
+
+            var claimsIdentity = new ClaimsIdentity(claims, "Cookies");
+
+            await HttpContext.SignInAsync("Cookies", new ClaimsPrincipal(claimsIdentity));
+
+            // BAŞARILI login: Randevuya yönlendir
             return RedirectToAction("Index", "Appointment");
         }
+
 
         [AllowAnonymous]
         [HttpPost]
