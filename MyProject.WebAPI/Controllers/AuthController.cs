@@ -41,32 +41,35 @@ namespace MyProject.WebAPI.Controllers
             var user = await _userManager.FindByEmailAsync(dto.Email) ?? await _userManager.FindByNameAsync(dto.Email); 
             if (user == null)
                 return Unauthorized(new { message = "E-posta veya şifre yanlış." });
-
+            
             // 2) Şifre kontrolü
             var passwordValid = await _userManager.CheckPasswordAsync(user, dto.Password);
             if (!passwordValid)
                 return Unauthorized(new { message = "E-posta veya şifre yanlış." });
-
+            var roles = await _userManager.GetRolesAsync(user);
             // 3) Token oluştur
-            var token = GenerateJwtToken(user);  // Kendi JWT oluşturma metodun
+            var token = GenerateJwtToken(user, roles);  // Kendi JWT oluşturma metodun
 
             // 4) Başarıyla token döndür
             return Ok(new LoginResultDto { Token = token });
         }
 
         // Örnek JWT üretme metodu (sadeleştirildi)
-        private string GenerateJwtToken(User user)
+        private string GenerateJwtToken(User user, IList<string> roles)
         {
             // 1) Claim’leri oluştur
             var claims = new List<Claim>
-        {
+            {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            // isteğe bağlı roller, vs:
-            // new Claim(ClaimTypes.Role, "Admin")
-        };
+            };
+
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
 
             // 2) Security key ve SigningCredentials
             var key = new SymmetricSecurityKey(

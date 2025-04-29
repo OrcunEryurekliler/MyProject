@@ -39,6 +39,7 @@ namespace MyProject.Web.Controllers
         }
 
         // GET: /Appointment
+        [Authorize]
         public async Task<IActionResult> Index()
         {
             // 1) Oturum açmış kullanıcıyı ve rollerini al

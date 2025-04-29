@@ -11,6 +11,7 @@ using MyProject.Core.Interfaces;
 using MyProject.Infrastructure.Data;
 using MyProject.Infrastructure.Data.Repositories.Generic;
 using MyProject.Infrastructure.Data.Repositories.Specific;
+using MyProject.Infrastructure.Data.Seed;
 using System.Data;
 using System.Text;
 
@@ -47,7 +48,7 @@ builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
     options.SignIn.RequireConfirmedAccount = false;
 })
 .AddEntityFrameworkStores<AppDbContext>()
-.AddDefaultTokenProviders(); ;
+.AddDefaultTokenProviders();
 
 // JWT Authentication
 builder.Services.AddAuthentication(options =>
@@ -80,6 +81,16 @@ var app = builder.Build();
 app.UseHttpsRedirection();
 app.UseAuthentication(); // BURADA
 app.UseAuthorization();
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+
+    // Roller ve Admin kullanıcı oluşturma işlemi
+    await IdentitySeed.SeedRolesAsync(services);
+    await IdentitySeed.SeedAdminUserAsync(services);
+}
+
 
 // Swagger (Sadece Development'da açık kalsın)
 if (app.Environment.IsDevelopment())

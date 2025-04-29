@@ -9,6 +9,7 @@ using System.Net;
 using Azure;
 using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace MyProject.Web.Controllers
 {
@@ -62,6 +63,7 @@ namespace MyProject.Web.Controllers
                 Password = model.Password
             };
 
+            using var client = new HttpClient();
             var response = await _httpClient.PostAsJsonAsync("https://localhost:7271/api/auth/login", loginDto);
 
             if (!response.IsSuccessStatusCode)
@@ -78,29 +80,39 @@ namespace MyProject.Web.Controllers
             }
 
             var result = await response.Content.ReadFromJsonAsync<LoginResultDto>();
-
             if (result is null || string.IsNullOrEmpty(result.Token))
             {
                 ModelState.AddModelError("", "Sunucudan geçerli token alınamadı.");
                 return View(model);
             }
 
+            // Token'dan role'i oku
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadJwtToken(result.Token);
+            var roleClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role);
+
+            if (roleClaim == null)
+            {
+                ModelState.AddModelError("", "Rol bulunamadı.");
+                return View(model);
+            }
             // TOKEN'I SESSION'A YAZ
             HttpContext.Session.SetString("Token", result.Token);
-
             // KULLANICIYI LOGIN YAP
             var claims = new List<Claim>
-    {
-        new Claim(ClaimTypes.Name, model.Email),
-        new Claim("AccessToken", result.Token)
-    };
+            {
+             new Claim(ClaimTypes.Name, model.Email),
+             new Claim(ClaimTypes.Role, roleClaim.Value),
+             new Claim("AccessToken", result.Token)
+            };
 
-            var claimsIdentity = new ClaimsIdentity(claims, "Cookies");
+            if (roleClaim.Value == "Doctor")
+                return RedirectToAction("Dashboard", "Doctor");
+            else if (roleClaim.Value == "Patient")
+                return RedirectToAction("Index", "Appointment");
+            else
+                return RedirectToAction("Index", "Home");
 
-            await HttpContext.SignInAsync("Cookies", new ClaimsPrincipal(claimsIdentity));
-
-            // BAŞARILI login: Randevuya yönlendir
-            return RedirectToAction("Index", "Appointment");
         }
 
 

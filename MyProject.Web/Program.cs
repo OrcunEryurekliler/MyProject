@@ -11,6 +11,9 @@ using MyProject.Infrastructure.Data.Seed;
 using MyProject.Infrastructure.Data.Repositories.Generic;
 using MyProject.Infrastructure.Data.Repositories.Specific;
 using MyProject.Application.Mappings;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +21,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
         sqlOptions => sqlOptions.MigrationsAssembly("MyProject.Infrastructure")));
+
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped(typeof(IService<>), typeof(Service<>));
 builder.Services.AddScoped<IDoctorUnavailabilityRepository, DoctorUnavailabilityRepository>();
@@ -36,25 +40,17 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.SlidingExpiration = true; // Her istekle süreyi uzatýr
 });
 
-builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
+/*builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
 })
-.AddEntityFrameworkStores<AppDbContext>();
-
-builder.Services.AddMvc(options =>
-{
-    options.Filters.Add(new AuthorizeFilter());
-});
+.AddEntityFrameworkStores<AppDbContext>();*/
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login"; // Giriþ sayfanýzýn yolu
 });
-// DTO Mapping Ayarlarý
-builder.Services.AddAutoMapper(typeof(AppointmentProfile).Assembly);
-builder.Services.AddAutoMapper(typeof(AppointmentViewProfile).Assembly);
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
 
 // Program.cs içinde, WebUI katmanýnýzda:
 builder.Services
@@ -69,26 +65,37 @@ builder.Services.AddSession(options =>
 });
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddAuthentication("Cookies")
-    .AddCookie("Cookies", options =>
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        options.LoginPath = "/Account/Login"; // yanlýþ giriþte buraya yönlendirir
-        options.LogoutPath = "/Account/Logout";
-        options.SlidingExpiration = true;
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = "yourIssuer",
+        ValidAudience = "yourAudience",
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("your_secret_key"))
+    };
+});
 
-    });
+// DTO Mapping Ayarlarý
+builder.Services.AddAutoMapper(typeof(AppointmentProfile).Assembly);
+builder.Services.AddAutoMapper(typeof(AppointmentViewProfile).Assembly);
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
+builder.Services.AddMvc(/*options =>
+{
+    options.Filters.Add(new AuthorizeFilter());
+}*/);
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    // Roller oluþtur
-    await IdentitySeed.SeedRolesAsync(services);
-    // Ýsteðe baðlý: Admin kullanýcýsý oluþtur
-    await IdentitySeed.SeedAdminUserAsync(services);
-}
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {

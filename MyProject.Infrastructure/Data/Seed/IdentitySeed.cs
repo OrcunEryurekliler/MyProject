@@ -12,40 +12,38 @@ namespace MyProject.Infrastructure.Data.Seed
         {
             var roleManager = services.GetRequiredService<RoleManager<IdentityRole<int>>>();
 
-            foreach (var roleName in Roles)
+            foreach (var role in Roles)
             {
-                if (!await roleManager.RoleExistsAsync(roleName))
-                    await roleManager.CreateAsync(new IdentityRole<int>(roleName));
+                if (!await roleManager.RoleExistsAsync(role))
+                    await roleManager.CreateAsync(new IdentityRole<int>(role));
             }
         }
 
         public static async Task SeedAdminUserAsync(IServiceProvider services)
         {
             var userManager = services.GetRequiredService<UserManager<User>>();
-            var roleManager = services.GetRequiredService<RoleManager<IdentityRole<int>>>();
 
-            // Admin bilgileri
             var adminEmail = "admin@hastane.com";
             var adminPassword = "Admin123!";
 
             var admin = await userManager.FindByEmailAsync(adminEmail);
             if (admin == null)
             {
-                admin = new User
+                var newAdmin = new User
                 {
                     UserName = adminEmail,
                     Email = adminEmail,
-                    Name = "Sistem Yöneticisi",
+                    Name = "Admin",
                     TCKN = "11111111111",
                     Cellphone = "05555555555",
-                    DateOfBirth = DateTime.Today.AddYears(-30),
+                    DateOfBirth = DateTime.Today.AddYears(-30)
                 };
-                var result = await userManager.CreateAsync(admin, adminPassword);
+
+                var result = await userManager.CreateAsync(newAdmin, adminPassword);
                 if (result.Succeeded)
                 {
-                    await userManager.AddToRoleAsync(admin, "Admin");
+                    await userManager.AddToRoleAsync(newAdmin, "Admin");
                 }
-                // Hata durumlarını log’layabilirsiniz
             }
         }
     }
