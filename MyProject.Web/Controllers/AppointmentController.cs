@@ -28,7 +28,7 @@ namespace MyProject.Web.Controllers
             IDoctorUnavailabilityService doctorUnavailabilityService,
             UserManager<User> userManager,
             IMapper mapper,
-        IAppointmentApiClient api)
+            IAppointmentApiClient api)
         {
             _appointmentService = appointmentService;
             _doctorProfileService = profileService;

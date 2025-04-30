@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using MyProject.Application.Interfaces;
@@ -14,6 +14,8 @@ using MyProject.Application.Mappings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,22 +39,17 @@ builder.Services.AddControllersWithViews();
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.ExpireTimeSpan = TimeSpan.FromMinutes(15);
-    options.SlidingExpiration = true; // Her istekle s�reyi uzat�r
+    options.SlidingExpiration = true; // Her istekle süreyi uzatır
 });
 
-/*builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
-{
-    options.SignIn.RequireConfirmedAccount = false;
-})
-.AddEntityFrameworkStores<AppDbContext>();*/
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    options.LoginPath = "/Account/Login"; // Giri� sayfan�z�n yolu
+    options.LoginPath = "/Account/Login"; // Giriş sayfanızın yolu
 });
 
 
-// Program.cs i�inde, WebUI katman�n�zda:
+// Program.cs içinde, WebUI katmanınızda:
 builder.Services
     .AddHttpClient<IAppointmentApiClient, AppointmentApiClient>(client =>
     {
@@ -61,30 +58,59 @@ builder.Services
 
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30); // Session s�resi
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // Session süresi
 });
 builder.Services.AddHttpContextAccessor();
-
-builder.Services.AddAuthentication(options =>
+builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequiredLength = 6;
+    options.SignIn.RequireConfirmedAccount = false;
 })
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = "yourIssuer",
-        ValidAudience = "yourAudience",
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("your_secret_key"))
-    };
-});
+.AddEntityFrameworkStores<AppDbContext>()
+.AddDefaultTokenProviders();
+// ➊ MVC için Cookie tabanlı auth
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+     .AddCookie(options =>
+     {
+         options.LoginPath = "/Account/Login";
+         options.LogoutPath = "/Account/Logout";
+         options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+         options.SlidingExpiration = true;
+     });
 
-// DTO Mapping Ayarlar�
+// ➋API çağrıları için JWT Bearer handler ekle
+builder.Services.AddAuthentication()
+     .AddJwtBearer("Bearer", options =>
+     {
+         options.TokenValidationParameters = new TokenValidationParameters
+         {
+             ValidateIssuer = true,
+             ValidateAudience = true,
+             ValidateLifetime = true,
+             ValidateIssuerSigningKey = true,
+             ValidIssuer = builder.Configuration["Jwt:Issuer"],
+             ValidAudience = builder.Configuration["Jwt:Audience"],
+             IssuerSigningKey = new SymmetricSecurityKey(
+                                    Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+         }
+;
+         // Cookie içinden de JWT okunması (isteğe bağlı)
+         options.Events = new JwtBearerEvents
+         {
+             OnMessageReceived = ctx =>
+                          {
+                              if (ctx.Request.Cookies.TryGetValue("AccessToken", out var token))
+                                  ctx.Token = token;
+                              return Task.CompletedTask;
+                          }
+         }
+         ;
+     });
+
+// DTO Mapping Ayarları
 builder.Services.AddAutoMapper(typeof(AppointmentProfile).Assembly);
 builder.Services.AddAutoMapper(typeof(AppointmentViewProfile).Assembly);
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
@@ -115,6 +141,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Appointment}/{action=Index}/{id?}");
 
 app.Run();

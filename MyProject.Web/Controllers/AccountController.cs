@@ -6,30 +6,29 @@ using MyProject.Core.Entities;
 using MyProject.Web.ViewModels.AccountViewModels;
 using MyProject.Web.DTO;
 using System.Net;
-using Azure;
-using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace MyProject.Web.Controllers
 {
 
     public class AccountController : Controller
     {
+        //Cookie entegrasyonu için
         private readonly HttpClient _httpClient;
-        private readonly IConfiguration _config;
+        private readonly IHttpContextAccessor _httpContext;
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly IPatientProfileService _patientService;
 
         public AccountController(IHttpClientFactory clientFactory,
-                                 IConfiguration config,
                                  UserManager<User> userManager,
                                  SignInManager<User> signInManager,
                                  IPatientProfileService patientService)
         {
             _httpClient = clientFactory.CreateClient("AuthApi");
-            _config = config;
             _userManager = userManager;
             _signInManager = signInManager;
             _patientService = patientService;
@@ -64,18 +63,16 @@ namespace MyProject.Web.Controllers
             };
 
             using var client = new HttpClient();
-            var response = await _httpClient.PostAsJsonAsync("https://localhost:7271/api/auth/login", loginDto);
+
+            var response = await client.PostAsJsonAsync("https://localhost:7271/api/auth/login", loginDto);
 
             if (!response.IsSuccessStatusCode)
             {
                 if (response.StatusCode == HttpStatusCode.Unauthorized)
-                {
                     ModelState.AddModelError("", "E-posta veya şifre yanlış.");
-                }
                 else
-                {
                     ModelState.AddModelError("", "Sunucu hatası oluştu. Lütfen tekrar deneyin.");
-                }
+
                 return View(model);
             }
 
@@ -86,33 +83,128 @@ namespace MyProject.Web.Controllers
                 return View(model);
             }
 
-            // Token'dan role'i oku
             var handler = new JwtSecurityTokenHandler();
             var jwtToken = handler.ReadJwtToken(result.Token);
-            var roleClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role);
 
-            if (roleClaim == null)
+            var roleClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role);
+            var nameIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+            var nameClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name);
+            var emailClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+
+            if (roleClaim == null || nameIdClaim == null)
             {
-                ModelState.AddModelError("", "Rol bulunamadı.");
+                ModelState.AddModelError("", "Kullanıcı bilgileri eksik.");
                 return View(model);
             }
-            // TOKEN'I SESSION'A YAZ
-            HttpContext.Session.SetString("Token", result.Token);
-            // KULLANICIYI LOGIN YAP
-            var claims = new List<Claim>
-            {
-             new Claim(ClaimTypes.Name, model.Email),
-             new Claim(ClaimTypes.Role, roleClaim.Value),
-             new Claim("AccessToken", result.Token)
-            };
 
+            // JWT'yi Cookie olarak kaydet (isteğe bağlı, API çağırmak için kullanabilirsin)
+            Response.Cookies.Append("AccessToken", result.Token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTimeOffset.UtcNow.AddHours(1)
+            });
+
+            // ASP.NET'e kullanıcı girişini bildir
+            var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, nameIdClaim.Value),
+        new Claim(ClaimTypes.Name, nameClaim?.Value ?? model.Email),
+        new Claim(ClaimTypes.Email, emailClaim?.Value ?? model.Email),
+        new Claim(ClaimTypes.Role, roleClaim.Value),
+    };
+
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+
+            // Rol bazlı yönlendirme
             if (roleClaim.Value == "Doctor")
                 return RedirectToAction("Dashboard", "Doctor");
             else if (roleClaim.Value == "Patient")
                 return RedirectToAction("Index", "Appointment");
             else
                 return RedirectToAction("Index", "Home");
+        }
 
+
+        [AllowAnonymous]
+        [HttpGet]
+        public IActionResult PatientRegister()
+        {
+            // Eğer kullanıcı zaten giriş yaptıysa randevu sayfasına yönlendir
+            if (User.Identity?.IsAuthenticated == true)
+                return RedirectToAction("Index", "Appointment");
+
+            return View();
+        }
+
+        [AllowAnonymous]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PatientRegister(RegisterPatientViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var registerDto = new
+            {
+                Name = model.Name,
+                Email = model.Email,
+                Password = model.Password,
+                TCKN = model.TCKN,
+                Cellphone = model.Cellphone,
+                DateOfBirth = model.DateOfBirth,
+                Gender = model.Gender,
+                MaritalStatus = model.MaritalStatus,
+                BloodType = model.BloodType,
+                profileType = model.profileType
+            };
+
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("https://localhost:7271/api/auth/register", registerDto);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await response.Content.ReadAsStringAsync();
+                    ModelState.AddModelError("", $"Kayıt başarısız: {errorMessage}");
+                    return View(model);
+                }
+
+                var result = await response.Content.ReadFromJsonAsync<LoginResultDto>();
+                if (result is null || string.IsNullOrEmpty(result.Token))
+                {
+                    ModelState.AddModelError("", "Sunucudan geçerli token alınamadı.");
+                    return View(model);
+                }
+
+                // Token'ı al ve cookie olarak sakla
+                Response.Cookies.Append("AccessToken", result.Token, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTimeOffset.UtcNow.AddHours(1)
+                });
+
+                // Token'dan rolü al
+                var handler = new JwtSecurityTokenHandler();
+                var jwtToken = handler.ReadJwtToken(result.Token);
+                var roleClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role);
+
+                if (roleClaim?.Value == "Patient")
+                    return RedirectToAction("Index", "Appointment");
+
+                return RedirectToAction("Index", "Home");
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", $"Hata oluştu: {ex.Message}");
+                return View(model);
+            }
         }
 
 

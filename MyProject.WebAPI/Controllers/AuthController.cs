@@ -1,6 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +11,7 @@ using MyProject.WebAPI.DTO;
 
 namespace MyProject.WebAPI.Controllers
 {
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/[controller]")]
     [ApiController]
     public class AuthController : ControllerBase
@@ -38,10 +40,10 @@ namespace MyProject.WebAPI.Controllers
                 return BadRequest(new { message = "Gönderilen veri boş." });
 
             // 1) E-posta ile user’ı bul
-            var user = await _userManager.FindByEmailAsync(dto.Email) ?? await _userManager.FindByNameAsync(dto.Email); 
+            var user = await _userManager.FindByEmailAsync(dto.Email) ?? await _userManager.FindByNameAsync(dto.Email);
             if (user == null)
                 return Unauthorized(new { message = "E-posta veya şifre yanlış." });
-            
+
             // 2) Şifre kontrolü
             var passwordValid = await _userManager.CheckPasswordAsync(user, dto.Password);
             if (!passwordValid)
@@ -54,22 +56,68 @@ namespace MyProject.WebAPI.Controllers
             return Ok(new LoginResultDto { Token = token });
         }
 
+        [HttpPost("register")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Register([FromBody] RegisterDto dto)
+        {
+            if (dto == null)
+                return BadRequest(new { message = "Gönderilen veri boş." });
+
+            // Kullanıcıyı oluştur
+            var user = new User
+            {
+                UserName = dto.Email,
+                Email = dto.Email,
+                Name = dto.Name,
+                Cellphone = dto.Cellphone,
+                DateOfBirth = dto.DateOfBirth,
+                Gender = dto.Gender,
+                MaritalStatus = dto.MaritalStatus,
+                TCKN = dto.TCKN
+
+            };
+
+            var result = await _userManager.CreateAsync(user, dto.Password); // Şifreyi burada manuel belirliyoruz (geliştirilmiş şifre politikası kullanılmalı)
+
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
+
+            // Rol belirleme (hastaysa hasta, doktor ise doktor rolü)
+            if (dto.ProfileType == "Patient")
+            {
+                user.PatientProfile = new PatientProfile { UserId = user.Id };
+                await _userManager.AddToRoleAsync(user, "Patient");
+            }
+            else if (dto.ProfileType == "Doctor")
+            {
+                user.DoctorProfile = new DoctorProfile { UserId = user.Id };
+                await _userManager.AddToRoleAsync(user, "Doctor");
+            }
+
+            // Kullanıcıyı güncelle
+            await _userManager.UpdateAsync(user);
+
+            return Ok(new { message = "Kullanıcı başarıyla kaydedildi." });
+        }
+
         // Örnek JWT üretme metodu (sadeleştirildi)
         private string GenerateJwtToken(User user, IList<string> roles)
         {
             // 1) Claim’leri oluştur
             var claims = new List<Claim>
             {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+             new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName),
+             new Claim(JwtRegisteredClaimNames.Email, user.Email),
+             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()) // <-- EKLENDİ
             };
 
             foreach (var role in roles)
             {
                 claims.Add(new Claim(ClaimTypes.Role, role));
             }
+
 
             // 2) Security key ve SigningCredentials
             var key = new SymmetricSecurityKey(

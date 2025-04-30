@@ -1,0 +1,114 @@
+﻿@using MyProject.Web.ViewModels.AccountViewModels
+@model RegisterPatientViewModel
+
+@{
+    ViewData["Title"] = "Kayıt Ol";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-lg rounded-4">
+                <div class="card-body p-5">
+                    <h2 class="mb-4 text-center fw-bold text-primary">Hesap Oluştur</h2>
+
+                    <form asp-action="PatientRegister" method="post" novalidate>
+                        <div asp-validation-summary="All" class="alert alert-danger"></div>
+
+                        @* İsim *@
+                        <div class="form-floating mb-3">
+                            <input asp-for="Name" class="form-control" placeholder="İsminiz" />
+                            <label asp-for="Name">İsim</label>
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        @* E-posta *@
+                        <div class="form-floating mb-3">
+                            <input asp-for="Email" class="form-control" placeholder="ornek@mail.com" />
+                            <label asp-for="Email">E-posta</label>
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+
+                        @* Şifre *@
+                        <div class="form-floating mb-3">
+                            <input asp-for="Password" type="password" class="form-control" placeholder="••••••••" />
+                            <label asp-for="Password">Şifre</label>
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+
+                        @* TCKN *@
+                        <div class="form-floating mb-3">
+                            <input asp-for="TCKN" class="form-control" placeholder="11 haneli TCKN" />
+                            <label asp-for="TCKN">T.C. Kimlik No</label>
+                            <span asp-validation-for="TCKN" class="text-danger"></span>
+                        </div>
+
+                        @* Telefon *@
+                        <div class="form-floating mb-3">
+                            <input asp-for="Cellphone" class="form-control" placeholder="05xxxxxxxxx" />
+                            <label asp-for="Cellphone">Cep Telefonu</label>
+                            <span asp-validation-for="Cellphone" class="text-danger"></span>
+                        </div>
+
+                        @* Doğum Tarihi *@
+                        <div class="form-floating mb-3">
+                            <input asp-for="DateOfBirth" type="date" class="form-control" placeholder="Doğum Tarihi" />
+                            <label asp-for="DateOfBirth">Doğum Tarihi</label>
+                            <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                        </div>
+
+                        @* Cinsiyet *@
+                        <div class="form-floating mb-3">
+                            <select asp-for="Gender" class="form-select">
+                                <option value="">Seçiniz</option>
+                                <option value="0">Erkek</option>
+                                <option value="1">Kadın</option>
+                                <option value="2">Diğer</option>
+                            </select>
+                            <label asp-for="Gender">Cinsiyet</label>
+                            <span asp-validation-for="Gender" class="text-danger"></span>
+                        </div>
+
+                        @* Medeni Hal *@
+                        <div class="form-floating mb-3">
+                            <select asp-for="MaritalStatus" class="form-select">
+                                <option value="">Seçiniz</option>
+                                <option value="0">Bekar</option>
+                                <option value="1">Evli</option>
+                            </select>
+                            <label asp-for="MaritalStatus">Medeni Hal</label>
+                            <span asp-validation-for="MaritalStatus" class="text-danger"></span>
+                        </div>
+
+                        @* Kan Grubu *@
+                        <div class="form-floating mb-4">
+                            <select asp-for="BloodType" class="form-select">
+                                <option value="">Seçiniz</option>
+                                <option value="0">0 Rh+</option>
+                                <option value="1">0 Rh-</option>
+                                <option value="2">A Rh+</option>
+                                <option value="3">A Rh-</option>
+                                <option value="4">B Rh+</option>
+                                <option value="5">B Rh-</option>
+                                <option value="6">AB Rh+</option>
+                                <option value="7">AB Rh-</option>
+                            </select>
+                            <label asp-for="BloodType">Kan Grubu</label>
+                            <span asp-validation-for="BloodType" class="text-danger"></span>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2">Kayıt Ol</button>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <a asp-action="Login" class="text-decoration-none">Hesabınız var mı? Giriş yapın</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

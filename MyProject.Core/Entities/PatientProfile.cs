@@ -21,7 +21,7 @@ namespace MyProject.Core.Entities
         public virtual User User { get; set; }
 
         // Hasta'ya özel alanlar
-        public BloodType BloodType { get; set; } = BloodType.OPozitif;
+        public BloodType BloodType { get; set; } 
         public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
     }
 }
