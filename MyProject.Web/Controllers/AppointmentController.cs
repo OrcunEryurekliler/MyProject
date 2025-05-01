@@ -55,7 +55,7 @@ namespace MyProject.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Booking(AppointmentBookingViewModel vm)
         {
-            var doctors = _httpClient.GetAsync
+            var specializations = _httpClient.GetAsync("api/specialization/GetAllSpecializations");
             return View();
         }
 
