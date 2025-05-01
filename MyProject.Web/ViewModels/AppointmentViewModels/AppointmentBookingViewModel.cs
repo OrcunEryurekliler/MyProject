@@ -1,13 +1,11 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-using MyProject.Core.Enums;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace MyProject.WebUI.ViewModels
 {
     public class AppointmentBookingViewModel
     {
         [Required]
-        public Specialization? Specialization { get; set; }
+        public IEnumerable<string> Specializations { get; set; }
 
         [Required]
         [DataType(DataType.Date)]

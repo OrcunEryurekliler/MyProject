@@ -1,6 +1,4 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-using MyProject.Core.Enums;
+﻿using System.ComponentModel.DataAnnotations;
 
 public class RegisterPatientViewModel
 {
@@ -31,12 +29,12 @@ public class RegisterPatientViewModel
     public DateTime DateOfBirth { get; set; }
 
     [Required(ErrorMessage = "Cinsiyet zorunludur")]
-    public Gender Gender { get; set; }
+    public string Gender { get; set; }
 
     [Required(ErrorMessage = "Medeni hal zorunludur")]
-    public MaritalStatus MaritalStatus { get; set; }
+    public string MaritalStatus { get; set; }
 
     [Required(ErrorMessage = "Kan grubu zorunludur")]
-    public BloodType BloodType { get; set; }
+    public string BloodType { get; set; }
     public string profileType { get; set; } = "Patient";
 }

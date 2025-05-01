@@ -110,7 +110,9 @@ namespace MyProject.WebAPI.Controllers
              new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName),
              new Claim(JwtRegisteredClaimNames.Email, user.Email),
              new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()) // <-- EKLENDİ
+             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+             new Claim(ClaimTypes.Name, user.UserName ?? user.Email),
+             new Claim(ClaimTypes.Email, user.Email)
             };
 
             foreach (var role in roles)

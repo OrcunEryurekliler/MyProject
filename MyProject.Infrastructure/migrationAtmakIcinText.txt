@@ -1,4 +1,4 @@
 cd C:\Users\oeryurek\source\repos\MyProject
-dotnet ef migrations add AddIdentityTables --project MyProject.Infrastructure --startup-project MyProject.Web
-dotnet ef database update AddIdentityTables --project MyProject.Infrastructure --startup-project MyProject.Web
+dotnet ef migrations add AddSpecializationTables --project MyProject.Infrastructure --startup-project MyProject.WebAPI
+dotnet ef database update AddSpecializationTables --project MyProject.Infrastructure --startup-project MyProject.WebAPI
 remove-migration "Silinecek Migration"

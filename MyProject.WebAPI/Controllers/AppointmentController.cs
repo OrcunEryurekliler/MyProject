@@ -2,13 +2,11 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.OpenApi.Extensions;
 using MyProject.Application.DTOs;
 using MyProject.Application.Interfaces;
 using MyProject.Core.Entities;
 using MyProject.Core.Enums;
 using MyProject.WebAPI.DTO;
-using Newtonsoft.Json;
 
 namespace MyProject.WebAPI.Controllers
 {

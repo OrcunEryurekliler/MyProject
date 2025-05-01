@@ -19,8 +19,10 @@ namespace MyProject.Core.Entities
 
         [ForeignKey(nameof(UserId))]
         public virtual User User { get; set; }
-        public Specialization Specialization {  get; set; }
         public string DiplomaNumber { get; set; }
+        public int SpecializationId { get; set; }
+        [ForeignKey(nameof(SpecializationId))]
+        public virtual Specialization Specialization { get; set; }
         public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
     }
 

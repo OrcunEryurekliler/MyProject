@@ -17,6 +17,7 @@ namespace MyProject.Infrastructure.Data
         public DbSet<DoctorProfile> DoctorProfiles { get; set; }
         public DbSet<Appointment> Appointments { get; set; }
         public DbSet<DoctorUnavailability> DoctorUnavailabilities { get; set; }
+        public DbSet<Specialization> Specializations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
