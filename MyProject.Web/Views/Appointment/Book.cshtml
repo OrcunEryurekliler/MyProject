@@ -1,10 +1,64 @@
-﻿@using MyProject.WebUI.ViewModels
+﻿@using MyProject.Web.DTO;
 @model AppointmentBookingViewModel
+@{
+    ViewData["Title"] = "Randevu Al";
+}
 
-<form asp-action="Book" method="post">
-    <label for="SelectedSpecializationId">Branş Seçiniz:</label>
-    <select asp-for="SelectedSpecializationId" asp-items="@(new SelectList(Model.Specializations, "Id", "Name"))">
-        <option value="">-- Seçiniz --</option>
-    </select>
-    <button type="submit">Devam Et</button>
+<h2>Randevu Al</h2>
+
+<form asp-action="BookAppointment" method="post">
+    <div class="form-group">
+        <label>Uzmanlık</label>
+        <select asp-for="SelectedSpecializationId" class="form-control" asp-items="Model.Specializations" id="specializationSelect">
+            <option value="">Seçiniz</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Tarih</label>
+        <input asp-for="SelectedDate" type="date" class="form-control" id="dateSelect" />
+    </div>
+
+    <button type="submit" formaction="/Appointment/Book" formmethod="post" class="btn btn-primary">Doktorları Getir</button>
+
+    @if (Model.AvailableDoctors != null && Model.AvailableDoctors.Any())
+    {
+        <div class="form-group mt-3">
+            <label>Doktor Seçin</label>
+            <select asp-for="SelectedDoctorId" class="form-control" id="doctorSelect">
+                <option value="">Seçiniz</option>
+                @foreach (var doctor in Model.AvailableDoctors)
+                {
+                    <option value="@doctor.Id">@doctor.FullName</option>
+                }
+            </select>
+        </div>
+    }
+
+    @if (Model.AvailableAppointmentSlots != null && Model.AvailableAppointmentSlots.Any())
+    {
+        <div class="form-group mt-3">
+            <label>Saat Seçin</label>
+            <select asp-for="SelectedAppointmentSlotId" class="form-control">
+                <option value="">Seçiniz</option>
+                @foreach (var slot in Model.AvailableAppointmentSlots)
+                {
+                    <div>
+                        @slot.SlotTime.ToString("HH:mm") <!-- Doğru kullanım -->
+                    </div>
+                }
+            </select>
+        </div>
+    }
+
+    <input type="hidden" asp-for="PatientId" />
+
+    <button type="submit" class="btn btn-success mt-3">Randevuyu Kaydet</button>
 </form>
+
+@section Scripts {
+    <script>
+        // Dinamik doktorları çekme işlemi için kullanılabilir (isteğe bağlı)
+        // Gelişmiş senaryo için AJAX ile doktorları ve slotları çekmek eklenebilir
+    </script>
+}

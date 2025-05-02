@@ -3,11 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using MyProject.WebAPI.DTO;
 using MyProject.Application.Interfaces;
 using MyProject.Core.Entities;
+using MyProject.Application.Helpers;
 
 namespace MyProject.WebAPI.Controllers
 {
-    [Authorize]
-    [Route("api/[controller]")]
+    //[Authorize]
+    [Route("api/appointment")]
     [ApiController]
     public class AppointmentController : ControllerBase
     {
@@ -19,37 +20,57 @@ namespace MyProject.WebAPI.Controllers
         }
 
         // GET: api/appointment/available-doctors?specialization=Cardiology&date=2025-04-26
-        [Authorize(Roles = "Patient")]
+        [AllowAnonymous]
         [HttpGet("available-doctors")]
-        public async Task<IActionResult> GetAvailableDoctors([FromQuery] Specialization specialization, [FromQuery] DateTime date)
+        public async Task<IActionResult> GetAvailableDoctors([FromQuery] int specializationId, [FromQuery] DateTime date)
         {
             try
             {
-                var doctors = await _appointmentService.GetAvailableDoctorsAsync(specialization.Id, date);
+                var doctors = await _appointmentService.GetAvailableDoctorsAsync(specializationId, date);
                 var doctorDtos = doctors.Select(d => new DoctorDto
                 {
                     Id = d.Id,
-                    FullName = d.FullName, // Mesela User üzerinden geliyor
+                    FullName = d.FullName,
                     SpecializationName = d.SpecializationName.ToString()
                 }).ToList();
                 return Ok(doctorDtos);
             }
             catch (Exception ex)
             {
-                // Hata mesajını logla
                 Console.WriteLine($"Error occurred while fetching doctors: {ex.Message}");
                 return StatusCode(500, "Internal server error");
             }
         }
 
 
-        // GET: api/appointment/available-timeslots?doctorId=5&date=2025-04-26
-        [HttpGet("available-timeslots")]
-        public async Task<IActionResult> GetAvailableTimeslots([FromQuery] int doctorId, [FromQuery] DateTime date)
+        /*
+        [Authorize(Roles = "Patient")]
+        [HttpGet("slots")]
+        public async Task<IActionResult> GetAppointmentSlots([FromQuery] int doctorId, [FromQuery] DateTime date)
         {
-            var timeslots = await _appointmentService.GetAvailableTimeslotsAsync(doctorId, date);
-            return Ok(timeslots);
+            try
+            {
+                var appointments = await _appointmentRepository.GetAppointmentsByDoctorAndDateAsync(doctorId, date);
+                var bookedTimes = appointments.Select(a => a.StartTime).ToList();
+
+                var allSlots = SlotGenerator.GenerateDailySlots();
+
+                var slotDtos = allSlots.Select(slot => new SlotDto
+                {
+                    Time = slot,
+                    IsBooked = bookedTimes.Contains(slot)
+                }).ToList();
+
+                return Ok(slotDtos);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Slot error: {ex.Message}");
+                return StatusCode(500, "Slot bilgileri alınamadı.");
+            }
         }
+        
+        
 
 
         /*[Authorize]

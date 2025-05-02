@@ -7,6 +7,7 @@ using MyProject.Core.Entities;
 using MyProject.Core.Interfaces;
 using MyProject.Application.DTOs;
 using MyProject.Core.Enums;
+using MyProject.Application.DTO;
 
 namespace MyProject.Application.Interfaces
 {
@@ -16,8 +17,9 @@ namespace MyProject.Application.Interfaces
         Task<IEnumerable<Appointment>> GetAllAsyncByDoctor(int Id);
         Task<IEnumerable<DoctorDto>> GetAvailableDoctorsAsync(int specializationId, DateTime date);
         Task<IEnumerable<Appointment>> GetAppointmentsByDoctorAndDateAsync(int doctorId, DateTime date);
-        Task<IEnumerable<TimeSpan>> GetAvailableTimeslotsAsync(int doctorId, DateTime date);
-        
+        Task<IEnumerable<AppointmentSlotDto>> GetAvailableTimeslotsAsync(int doctorId, DateTime date);
+
+
 
     }
 }

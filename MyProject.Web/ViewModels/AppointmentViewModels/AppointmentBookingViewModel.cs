@@ -1,23 +1,35 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using MyProject.Web.DTO;
+using System.ComponentModel.DataAnnotations;
 
-namespace MyProject.WebUI.ViewModels
+public class AppointmentBookingViewModel
 {
-    public class AppointmentBookingViewModel
-    {
-        public int SelectedSpecializationId { get; set; }
-        [Required]
-        public IEnumerable<SpecializationDto> Specializations { get; set; }
-        [Required]
-        [DataType(DataType.Date)]
-        public DateTime Date { get; set; }
+    // Uzmanlık (specialization) listesi için
+    public List<SelectListItem> Specializations { get; set; } = new();
 
-        [Required]
-        public int DoctorProfileId { get; set; }
+    // Kullanıcının seçtiği uzmanlık
+    [Display(Name = "Uzmanlık")]
+    public int SelectedSpecializationId { get; set; }
 
-        [Required]
-        public TimeSpan TimeSlot { get; set; }
+    // Tarih seçimi
+    [Display(Name = "Tarih")]
+    [DataType(DataType.Date)]
+    public DateTime SelectedDate { get; set; }
 
-        public int DurationMinutes { get; set; } = 30;
-    }
+    // Doktorlar listesi (API'den gelir)
+    public IEnumerable<DoctorDto> AvailableDoctors { get; set; } = new List<DoctorDto>();
+
+    // Seçilen doktor
+    [Display(Name = "Doktor")]
+    public int SelectedDoctorId { get; set; }
+
+    // Randevu saatleri (slotlar)
+    public IEnumerable<AppointmentSlotDto> AvailableAppointmentSlots { get; set; } = new List<AppointmentSlotDto>();
+
+    // Seçilen slot
+    [Display(Name = "Randevu Saati")]
+    public int SelectedAppointmentSlotId { get; set; }
+
+    // Giriş yapmış hasta (gerekirse)
+    public int PatientId { get; set; }
 }

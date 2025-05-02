@@ -1,84 +1,84 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using AutoMapper;
+using MyProject.Application.DTO;
 using MyProject.Application.DTOs;
 using MyProject.Application.Helpers;
 using MyProject.Application.Interfaces;
 using MyProject.Application.Services.Generic;
 using MyProject.Core.Entities;
-using MyProject.Core.Enums;
 using MyProject.Core.Interfaces;
 
-namespace MyProject.Application.Services.Specific
+public class AppointmentService : Service<Appointment>, IAppointmentService
 {
-    public class AppointmentService: Service<Appointment>, IAppointmentService
+    private readonly IAppointmentRepository _appointmentRepository;
+    private readonly IDoctorProfileRepository _doctorProfileRepository;
+    private readonly IMapper _mapper;
+
+    public AppointmentService(IAppointmentRepository appointmentRepository,
+                              IDoctorProfileRepository doctorProfileRepository,
+                              IMapper mapper)
+        : base(appointmentRepository)
     {
-        private readonly IAppointmentRepository _appointmentRepository;
-        private readonly IDoctorProfileService _doctorService;
-        private readonly IPatientProfileService _patientService;
-        private readonly IMapper _mapper;
-        public AppointmentService(IAppointmentRepository repository,
-                                  IDoctorProfileService doctorProfileService,
-                                  IPatientProfileService patientProfileService,
-                                  IMapper mapper) : base(repository)
-        {
-            _appointmentRepository = repository;
-            _doctorService = doctorProfileService;
-            _patientService = patientProfileService;
-            _mapper = mapper;
-        }
-
-
-        public async Task<IEnumerable<Appointment>> GetAllAsyncByPatient(int Id)
-        {
-            return await _appointmentRepository.GetAllAsyncByPatient(Id);
-        }
-        public async Task<IEnumerable<Appointment>> GetAllAsyncByDoctor(int Id)
-        {
-            return await _appointmentRepository.GetAllAsyncByDoctor(Id);
-        }
-        public async Task<IEnumerable<Appointment>> GetAppointmentsByDoctorAndDateAsync(int doctorId, DateTime date)
-        {
-            var doctorAppointments = await _appointmentRepository.GetAllAsync(x =>x.DoctorProfileId == doctorId && x.StartTime == date);
-            return doctorAppointments;
-        }
-        public async Task<IEnumerable<DoctorDto>> GetAvailableDoctorsAsync(int specializationId, DateTime date)
-        {
-            var doctors = await _doctorService.GetDoctorsBySpecializationAsync(specializationId);
-            var availableDoctors = new List<DoctorDto>();
-
-            foreach (var doctor in doctors)
-            {
-                var appointments = await _appointmentRepository.GetAppointmentsByDoctorAndDateAsync(doctor.Id, date);
-                var slots = SlotGenerator.GenerateDailySlots();
-
-                if (appointments.Count() < slots.Count) // en az 1 slot boş
-                {
-                    availableDoctors.Add(doctor); // zaten DoctorDto
-                }
-            }
-
-            return availableDoctors;
-        }
-
-
-
-
-        public async Task<IEnumerable<TimeSpan>> GetAvailableTimeslotsAsync(int doctorId, DateTime date)
-        {
-            // Burada sabah 9-12:30 ve öğlen 13:30-17:30 slot üret
-            var slots = new List<TimeSpan>();
-
-            for (var time = new TimeSpan(9, 0, 0); time < new TimeSpan(12, 30, 0); time += TimeSpan.FromMinutes(30))
-                slots.Add(time);
-
-            for (var time = new TimeSpan(13, 30, 0); time < new TimeSpan(17, 30, 0); time += TimeSpan.FromMinutes(30))
-                slots.Add(time);
-
-            return slots;
-        }
+        _appointmentRepository = appointmentRepository;
+        _doctorProfileRepository = doctorProfileRepository;
+        _mapper = mapper;
     }
+
+    public async Task<IEnumerable<Appointment>> GetAllAsyncByPatient(int id)
+    {
+        return await _appointmentRepository.GetAllAsyncByPatient(id);
+    }
+
+    public async Task<IEnumerable<Appointment>> GetAllAsyncByDoctor(int id)
+    {
+        return await _appointmentRepository.GetAllAsyncByDoctor(id);
+    }
+
+    public async Task<IEnumerable<Appointment>> GetAppointmentsByDoctorAndDateAsync(int doctorId, DateTime date)
+    {
+        return await _appointmentRepository.GetAllAsync(x =>
+            x.DoctorProfileId == doctorId && x.StartTime.Date == date.Date);
+    }
+
+    public async Task<IEnumerable<DoctorDto>> GetAvailableDoctorsAsync(int specializationId, DateTime date)
+    {
+        var doctors = await _doctorProfileRepository.GetDoctorProfilesBySpecialization(specializationId);
+        var availableDoctors = new List<DoctorDto>();
+        var slots = SlotGenerator.GenerateDailySlots();
+
+        foreach (var doctor in doctors)
+        {
+            var appointments = await _appointmentRepository.GetAppointmentsByDoctorAndDateAsync(doctor.Id, date);
+            if (appointments.Count() < slots.Count)
+            {
+                availableDoctors.Add(new DoctorDto
+                {
+                    Id = doctor.Id,
+                    FullName = doctor.User.Name,
+                    SpecializationName = doctor.Specialization.Name
+                });
+            }
+        }
+
+        return availableDoctors;
+    }
+
+    public async Task<IEnumerable<AppointmentSlotDto>> GetAvailableTimeslotsAsync(int doctorId, DateTime date)
+    {
+        var allSlots = SlotGenerator.GenerateDailySlots(); // List<TimeOnly>
+        var appointments = await _appointmentRepository.GetAppointmentsByDoctorAndDateAsync(doctorId, date);
+        var bookedSlots = appointments.Select(a => TimeOnly.FromDateTime(a.StartTime)).ToList();
+
+        var slotDtos = allSlots.Select((slot, index) => new AppointmentSlotDto
+        {
+            Id = index,
+            SlotTime = slot,
+            IsAvailable = !bookedSlots.Contains(slot)
+        });
+
+        return slotDtos;
+    }
+
+
+
 }
