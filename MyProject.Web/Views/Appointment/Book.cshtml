@@ -1,1 +1,10 @@
-﻿
+﻿@using MyProject.WebUI.ViewModels
+@model AppointmentBookingViewModel
+
+<form asp-action="Book" method="post">
+    <label for="SelectedSpecializationId">Branş Seçiniz:</label>
+    <select asp-for="SelectedSpecializationId" asp-items="@(new SelectList(Model.Specializations, "Id", "Name"))">
+        <option value="">-- Seçiniz --</option>
+    </select>
+    <button type="submit">Devam Et</button>
+</form>

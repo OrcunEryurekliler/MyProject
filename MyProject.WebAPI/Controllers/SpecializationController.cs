@@ -10,16 +10,16 @@ namespace MyProject.WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class SpecializationsController : ControllerBase
+    public class SpecializationController : ControllerBase
     {
         private readonly ISpecializationService _service;
-        public SpecializationsController(ISpecializationService service)
+        public SpecializationController(ISpecializationService service)
         {
             _service = service;
         }
         // GET: api/<SpecializationsController>
-        [HttpGet]
-        public async Task<IEnumerable<Specialization>> GetAllSpecializations()
+        [HttpGet("all")]
+        public async Task<IEnumerable<Specialization>> GetAll()
         {
             var allSpecializations = await _service.GetAllAsync();
             return allSpecializations;

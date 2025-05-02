@@ -29,10 +29,11 @@ builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IDoctorProfileRepository, DoctorProfileRepository>();
 builder.Services.AddScoped<IDoctorProfileService, DoctorProfileService>();
-builder.Services.AddScoped<IDoctorUnavailabilityRepository, DoctorUnavailabilityRepository>();
-builder.Services.AddScoped<IDoctorUnavailabilityService, DoctorUnavailabilityService>();
 builder.Services.AddScoped<IPatientProfileRepository, PatientProfileRepository>();
 builder.Services.AddScoped<IPatientProfileService, PatientProfileService>();
+builder.Services.AddScoped<ISpecializationRepository, SpecializationRepository>();
+builder.Services.AddScoped<ISpecializationService, SpecializationService>();
+
 
 // AutoMapper
 builder.Services.AddAutoMapper(typeof(AppointmentProfile).Assembly);

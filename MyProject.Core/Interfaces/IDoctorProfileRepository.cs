@@ -6,6 +6,6 @@ namespace MyProject.Core.Interfaces
     public interface IDoctorProfileRepository : IRepository<DoctorProfile>
     {
         Task<IEnumerable<DoctorProfile>> GetByIdsAsync(IEnumerable<int> ids);
-        Task<IEnumerable<DoctorProfile>> GetDoctorProfilesBySpecialization(Specialization specialization);
+        Task<IEnumerable<DoctorProfile>> GetDoctorProfilesBySpecialization(int specializationId);
     }
 }

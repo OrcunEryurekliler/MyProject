@@ -1,16 +1,12 @@
-﻿using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MyProject.Application.DTOs;
+using MyProject.WebAPI.DTO;
 using MyProject.Application.Interfaces;
 using MyProject.Core.Entities;
-using MyProject.Core.Enums;
-using MyProject.WebAPI.DTO;
 
 namespace MyProject.WebAPI.Controllers
 {
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class AppointmentController : ControllerBase
@@ -22,36 +18,19 @@ namespace MyProject.WebAPI.Controllers
             _appointmentService = appointmentService;
         }
 
-        [HttpGet("doctor/{doctorId}")]
-        public async Task<IActionResult> GetAppointmentsByDoctor(int doctorId, [FromQuery] DateTime date)
-        {
-            if (date == DateTime.MinValue)
-            {
-                return BadRequest(new { message = "Tarih geçerli değil." });
-            }
-
-            var appointments = await _appointmentService.GetAllByDoctorAndDateAsync(doctorId, date);
-
-            if (!appointments.Any())
-            {
-                return NotFound(new { message = "Bu tarihte doktorun randevusu bulunamadı." });
-            }
-
-            return Ok(appointments);
-        }
-
         // GET: api/appointment/available-doctors?specialization=Cardiology&date=2025-04-26
+        [Authorize(Roles = "Patient")]
         [HttpGet("available-doctors")]
         public async Task<IActionResult> GetAvailableDoctors([FromQuery] Specialization specialization, [FromQuery] DateTime date)
         {
             try
             {
-                var doctors = await _appointmentService.GetAvailableDoctorsAsync(specialization, date);
-                var doctorDtos = doctors.Select(d => new AvailableDoctorDto
+                var doctors = await _appointmentService.GetAvailableDoctorsAsync(specialization.Id, date);
+                var doctorDtos = doctors.Select(d => new DoctorDto
                 {
                     Id = d.Id,
-                    FullName = d.User.Name, // Mesela User üzerinden geliyor
-                    SpecializationName = d.Specialization.ToString()
+                    FullName = d.FullName, // Mesela User üzerinden geliyor
+                    SpecializationName = d.SpecializationName.ToString()
                 }).ToList();
                 return Ok(doctorDtos);
             }
@@ -73,7 +52,7 @@ namespace MyProject.WebAPI.Controllers
         }
 
 
-        [Authorize]
+        /*[Authorize]
         [HttpPost("create")]
         public async Task<IActionResult> Create([FromBody] CreateAppointmentDto dto)
         {
@@ -96,7 +75,7 @@ namespace MyProject.WebAPI.Controllers
                 return Ok(new { message = "Randevu başarıyla oluşturuldu." });
 
             return BadRequest(new { message = "Randevu oluşturulamadı." });
-        }
+        }*/
 
     }
 }

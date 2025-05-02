@@ -35,6 +35,12 @@ namespace MyProject.Infrastructure.Data.Repositories.Specific
                                    .Where(a => a.PatientProfileId == id)
                                    .ToListAsync();
         }
+        public async Task<IEnumerable<Appointment>> GetAppointmentsByDoctorAndDateAsync(int doctorId, DateTime date)
+        {
+            return await _dbContext.Set<Appointment>()
+                                 .Where(a => a.DoctorProfileId == doctorId && a.StartTime.Date == date.Date)
+                                 .ToListAsync();
+        }
 
     }
 }

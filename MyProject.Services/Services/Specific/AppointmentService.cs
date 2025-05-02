@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
 using MyProject.Application.DTOs;
+using MyProject.Application.Helpers;
 using MyProject.Application.Interfaces;
 using MyProject.Application.Services.Generic;
 using MyProject.Core.Entities;
@@ -16,17 +17,17 @@ namespace MyProject.Application.Services.Specific
     public class AppointmentService: Service<Appointment>, IAppointmentService
     {
         private readonly IAppointmentRepository _appointmentRepository;
-        private readonly IDoctorProfileRepository _doctorProfileRepository;
-        private readonly IPatientProfileService _patientProfileService;
+        private readonly IDoctorProfileService _doctorService;
+        private readonly IPatientProfileService _patientService;
         private readonly IMapper _mapper;
         public AppointmentService(IAppointmentRepository repository,
-                                  IDoctorProfileRepository doctorProfileRepository,
+                                  IDoctorProfileService doctorProfileService,
                                   IPatientProfileService patientProfileService,
                                   IMapper mapper) : base(repository)
         {
             _appointmentRepository = repository;
-            _doctorProfileRepository = doctorProfileRepository;
-            _patientProfileService = patientProfileService;
+            _doctorService = doctorProfileService;
+            _patientService = patientProfileService;
             _mapper = mapper;
         }
 
@@ -39,17 +40,30 @@ namespace MyProject.Application.Services.Specific
         {
             return await _appointmentRepository.GetAllAsyncByDoctor(Id);
         }
-
-        Task<IEnumerable<AppointmentDto>> IAppointmentService.GetAllByDoctorAndDateAsync(int doctorId, DateTime date)
+        public async Task<IEnumerable<Appointment>> GetAppointmentsByDoctorAndDateAsync(int doctorId, DateTime date)
         {
-            throw new NotImplementedException();
+            var doctorAppointments = await _appointmentRepository.GetAllAsync(x =>x.DoctorProfileId == doctorId && x.StartTime == date);
+            return doctorAppointments;
+        }
+        public async Task<IEnumerable<DoctorDto>> GetAvailableDoctorsAsync(int specializationId, DateTime date)
+        {
+            var doctors = await _doctorService.GetDoctorsBySpecializationAsync(specializationId);
+            var availableDoctors = new List<DoctorDto>();
+
+            foreach (var doctor in doctors)
+            {
+                var appointments = await _appointmentRepository.GetAppointmentsByDoctorAndDateAsync(doctor.Id, date);
+                var slots = SlotGenerator.GenerateDailySlots();
+
+                if (appointments.Count() < slots.Count) // en az 1 slot boş
+                {
+                    availableDoctors.Add(doctor); // zaten DoctorDto
+                }
+            }
+
+            return availableDoctors;
         }
 
-        public async Task<IEnumerable<DoctorProfile>> GetAvailableDoctorsAsync(Specialization specialization, DateTime date)
-        {
-            var doctors = await _doctorProfileRepository.GetDoctorProfilesBySpecialization(specialization);
-            return doctors;
-        }
 
 
 
@@ -65,12 +79,6 @@ namespace MyProject.Application.Services.Specific
                 slots.Add(time);
 
             return slots;
-        }
-
-        public async Task<int> GetPatientIdByUserId(int userId)
-        {
-            var user = await _patientProfileService.GetByUserIdAsync(userId);
-            return user.Id;
         }
     }
 }

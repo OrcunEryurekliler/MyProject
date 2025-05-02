@@ -11,6 +11,8 @@ namespace MyProject.Core.Interfaces
     {
         Task<IEnumerable<Appointment>> GetAllAsyncByPatient(int id);
         Task<IEnumerable<Appointment>> GetAllAsyncByDoctor(int id);
+        Task<IEnumerable<Appointment>> GetAppointmentsByDoctorAndDateAsync(int doctorId, DateTime date);
+
 
     }
 }

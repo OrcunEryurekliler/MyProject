@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MyProject.Web.DTO;
 using MyProject.Web.ViewModels.AppointmentViewModels;
 using MyProject.WebUI.ViewModels;
+using System.Collections.Generic;
 using System.Security.Claims;
 
 namespace MyProject.Web.Controllers
 {
-    //[Authorize]
+    [Authorize]
     public class AppointmentController : Controller
     {
 
@@ -44,9 +46,12 @@ namespace MyProject.Web.Controllers
         }
 
         [Authorize(Roles = "Patient")]
-        public async Task<IActionResult> Book()
+        public async Task<IActionResult> Book(AppointmentBookingViewModel vm)
         {
-            return View();
+            var specializations = await _httpClient.GetFromJsonAsync<IEnumerable<SpecializationDto>>("api/specializations/all");
+            vm.Specializations = specializations;
+            vm.SelectedSpecializationId = 0;
+            return View(vm);
         }
 
         // POST: Form gönderildiğinde API'ye yönlendir
@@ -55,7 +60,6 @@ namespace MyProject.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Booking(AppointmentBookingViewModel vm)
         {
-            var specializations = _httpClient.GetAsync("api/specialization/GetAllSpecializations");
             return View();
         }
 

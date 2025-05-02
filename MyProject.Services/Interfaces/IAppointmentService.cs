@@ -14,11 +14,10 @@ namespace MyProject.Application.Interfaces
     {
         Task<IEnumerable<Appointment>> GetAllAsyncByPatient(int Id);
         Task<IEnumerable<Appointment>> GetAllAsyncByDoctor(int Id);
-        Task<IEnumerable<AppointmentDto>> GetAllByDoctorAndDateAsync(int doctorId, DateTime date);
-        //Randevu alma ekranı için gereki olanlar
-        Task<IEnumerable<DoctorProfile>> GetAvailableDoctorsAsync(Specialization specialization, DateTime date);
+        Task<IEnumerable<DoctorDto>> GetAvailableDoctorsAsync(int specializationId, DateTime date);
+        Task<IEnumerable<Appointment>> GetAppointmentsByDoctorAndDateAsync(int doctorId, DateTime date);
         Task<IEnumerable<TimeSpan>> GetAvailableTimeslotsAsync(int doctorId, DateTime date);
-        Task<int> GetPatientIdByUserId(int userId);
+        
 
     }
 }

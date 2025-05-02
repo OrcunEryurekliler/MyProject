@@ -19,8 +19,12 @@ public class DoctorProfileRepository : Repository<DoctorProfile>, IDoctorProfile
         return await _context.Set<DoctorProfile>().Where(d => ids.Contains(d.Id)).ToListAsync();
     }
 
-    public async Task<IEnumerable<DoctorProfile>> GetDoctorProfilesBySpecialization(Specialization specialization)
+    public async Task<IEnumerable<DoctorProfile>> GetDoctorProfilesBySpecialization(int specializationId)
     {
-        return await _context.Set<DoctorProfile>().Where(d => d.Specialization == specialization).Include(d => d.User).ToListAsync();
+        return await _context.Set<DoctorProfile>()
+                             .Where(d => d.Specialization.Id == specializationId)
+                             .Include(d => d.Specialization)
+                             .Include(d => d.User)
+                             .ToListAsync();
     }
 }
