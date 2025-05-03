@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyProject.WebAPI.DTO;
+using MyProject.Application.DTO;
 using MyProject.Application.Interfaces;
-using MyProject.Core.Entities;
 using MyProject.Application.Helpers;
 
 namespace MyProject.WebAPI.Controllers
@@ -43,15 +43,16 @@ namespace MyProject.WebAPI.Controllers
         }
 
 
-        /*
+        
         [Authorize(Roles = "Patient")]
         [HttpGet("slots")]
         public async Task<IActionResult> GetAppointmentSlots([FromQuery] int doctorId, [FromQuery] DateTime date)
         {
             try
             {
-                var appointments = await _appointmentRepository.GetAppointmentsByDoctorAndDateAsync(doctorId, date);
-                var bookedTimes = appointments.Select(a => a.StartTime).ToList();
+                var appointments = await _appointmentService.GetAvailableTimeslotsAsync(doctorId, date);
+                var bookedTimes = appointments.Select(a => a.StartTime.TimeOfDay).ToList();
+
 
                 var allSlots = SlotGenerator.GenerateDailySlots();
 

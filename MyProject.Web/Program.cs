@@ -47,11 +47,7 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// API HttpClient
-builder.Services.AddHttpClient("ApiClient",client =>
-{
-    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]);
-});
+
 
 // MVC & Session
 builder.Services.AddControllersWithViews();
@@ -59,7 +55,14 @@ builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
 });
+
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddTransient<AccessTokenHandler>();
+// API HttpClient
+builder.Services.AddHttpClient("ApiClient", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]);
+});
 
 var app = builder.Build();
 
