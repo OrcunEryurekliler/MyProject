@@ -5,30 +5,31 @@ namespace MyProject.Application.Helpers
 {
     public static class SlotGenerator
     {
-        public static List<TimeOnly> GenerateDailySlots()
+        public static List<TimeSpan> GenerateDailySlots()
         {
-            var slots = new List<TimeOnly>();
+            var slots = new List<TimeSpan>();
 
-            var morningStart = new TimeOnly(9, 0);
-            var morningEnd = new TimeOnly(12, 30);
-            var afternoonStart = new TimeOnly(13, 30);
-            var afternoonEnd = new TimeOnly(17, 30);
+            var morningStart = new TimeSpan(9, 0, 0);
+            var morningEnd = new TimeSpan(12, 30, 0);
+            var afternoonStart = new TimeSpan(13, 30, 0);
+            var afternoonEnd = new TimeSpan(17, 30, 0);
 
             var current = morningStart;
             while (current < morningEnd)
             {
                 slots.Add(current);
-                current = current.AddMinutes(30);
+                current = current.Add(TimeSpan.FromMinutes(30));
             }
 
             current = afternoonStart;
             while (current < afternoonEnd)
             {
                 slots.Add(current);
-                current = current.AddMinutes(30);
+                current = current.Add(TimeSpan.FromMinutes(30));
             }
 
             return slots;
         }
     }
+
 }

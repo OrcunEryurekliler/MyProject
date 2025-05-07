@@ -1,64 +1,75 @@
-﻿@using MyProject.Web.DTO;
-@model AppointmentBookingViewModel
-@{
-    ViewData["Title"] = "Randevu Al";
-}
+﻿@model AppointmentBookingViewModel
 
-<h2>Randevu Al</h2>
+<form asp-action="Book" method="post">
+	<!-- uzmanlık & tarih -->
+	<select asp-for="SelectedSpecializationId" asp-items="Model.Specializations"></select>
+	<input asp-for="SelectedDate" type="date" />
 
-<form asp-action="BookAppointment" method="post">
-    <div class="form-group">
-        <label>Uzmanlık</label>
-        <select asp-for="SelectedSpecializationId" class="form-control" asp-items="Model.Specializations" id="specializationSelect">
-            <option value="">Seçiniz</option>
-        </select>
-    </div>
-
-    <div class="form-group">
-        <label>Tarih</label>
-        <input asp-for="SelectedDate" type="date" class="form-control" id="dateSelect" />
-    </div>
-
-    <button type="submit" formaction="/Appointment/Book" formmethod="post" class="btn btn-primary">Doktorları Getir</button>
-
-    @if (Model.AvailableDoctors != null && Model.AvailableDoctors.Any())
-    {
-        <div class="form-group mt-3">
-            <label>Doktor Seçin</label>
-            <select asp-for="SelectedDoctorId" class="form-control" id="doctorSelect">
-                <option value="">Seçiniz</option>
-                @foreach (var doctor in Model.AvailableDoctors)
-                {
-                    <option value="@doctor.Id">@doctor.FullName</option>
-                }
-            </select>
-        </div>
-    }
-
-    @if (Model.AvailableAppointmentSlots != null && Model.AvailableAppointmentSlots.Any())
-    {
-        <div class="form-group mt-3">
-            <label>Saat Seçin</label>
-            <select asp-for="SelectedAppointmentSlotId" class="form-control">
-                <option value="">Seçiniz</option>
-                @foreach (var slot in Model.AvailableAppointmentSlots)
-                {
-                    <div>
-                        @slot.SlotTime.ToString("HH:mm") <!-- Doğru kullanım -->
-                    </div>
-                }
-            </select>
-        </div>
-    }
-
-    <input type="hidden" asp-for="PatientId" />
-
-    <button type="submit" class="btn btn-success mt-3">Randevuyu Kaydet</button>
+	<button type="submit">Doktorları Getir</button>
 </form>
 
+@if (Model.AvailableDoctors?.Any() == true)
+{
+	<select asp-for="SelectedDoctorId" id="doctorSelect">
+		@foreach (var d in Model.AvailableDoctors)
+		{
+			<option value="@d.Id">@d.FullName</option>
+		}
+	</select>
+	<button id="loadSlots">Saatleri Göster</button>
+	<select asp-for="SelectedAppointmentSlotId" name="SelectedAppointmentSlotId">
+		<option>Seçiniz</option>
+	</select>
+}
+
+
 @section Scripts {
-    <script>
-        // Dinamik doktorları çekme işlemi için kullanılabilir (isteğe bağlı)
-        // Gelişmiş senaryo için AJAX ile doktorları ve slotları çekmek eklenebilir
-    </script>
+	<script>
+				document.getElementById('loadSlots').addEventListener('click', async () => {
+		  const docSelect = document.getElementById('doctorSelect');
+		  const docId = docSelect ? docSelect.value : null;
+		  const dateInput = document.querySelector('input[name="SelectedDate"]');
+		  const date = dateInput ? dateInput.value : null;
+		  const slotSelect = document.querySelector('select[name="SelectedAppointmentSlotId"]');
+
+		  if (!docId || !date) {
+			alert('Lütfen doktor ve tarih seçiniz.');
+			return;
+		  }
+
+		  slotSelect.innerHTML = '<option>Seçiniz</option>';
+
+		  try {
+			const response = await fetch(`/Appointment/Slots?doctorId=${docId}&date=${date}`);
+			if (!response.ok) throw new Error('Sunucudan geçerli bir yanıt alınamadı.');
+			const slots = await response.json();
+					console.log("Gelen slotlar:", slots);
+		slots.forEach(s => {
+			console.log("Slot içeriği:", s);
+		});
+
+					slots.forEach(s => {
+			var timeText = (s.slotTime || '').toString(); // null veya undefined olursa boş string olur
+
+			var opt = document.createElement('option');
+			opt.value = s.id;
+
+			// Güvenli bir şekilde ilk 5 karakter (HH:mm) al
+			opt.text = timeText.length >= 5 ? timeText.substring(0, 5) : timeText;
+
+			if (!s.isAvailable) {
+				opt.disabled = true;
+				opt.style.color = 'red';
+			}
+
+			slotSelect.appendChild(opt);
+		});
+
+		  } catch (error) {
+			console.error('Slotları yüklerken hata oluştu:', error);
+			alert('Slotları yüklerken bir hata oluştu. Lütfen daha sonra tekrar deneyiniz.');
+		  }
+		});
+
+	</script>
 }

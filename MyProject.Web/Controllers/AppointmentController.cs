@@ -100,38 +100,26 @@ namespace MyProject.Web.Controllers
 
             return View(vm); // Doktorları ve hata mesajlarını gösteren view'ı döndür
         }
-        
-        [HttpPost]
-        public async Task<IActionResult> BookAppointment(AppointmentBookingViewModel vm)
+
+        // slotları ajax ile getirmek istersen:
+        [Authorize(Roles = "Patient")]
+        [HttpGet]
+        public async Task<IActionResult> Slots(int doctorId, DateTime date)
         {
-            if (vm.SelectedAppointmentSlotId == 0)
+            
+            var slots = await _httpClient
+                .GetFromJsonAsync<IEnumerable<AppointmentSlotDto>>(
+                    $"api/appointment/slots?doctorId={doctorId}&date={date:yyyy-MM-dd}");
+            if(slots == null)
             {
-                // Hatalı giriş kontrolü
-                ModelState.AddModelError("", "Lütfen geçerli bir randevu saati seçin.");
-                return View("Book", vm); // Hata durumunda Book sayfasını tekrar göster
+                return Json(slots); 
             }
-
-            // Seçilen randevuyu kaydetmek için API'ye POST isteği gönder
-            var response = await _httpClient.PostAsJsonAsync("api/appointments/book", new AppointmentBookingDto
-            {
-                PatientId = vm.PatientId,
-                DoctorId = vm.SelectedDoctorId,
-                AppointmentSlotId = vm.SelectedAppointmentSlotId,
-                Date = vm.SelectedDate
-            });
-
-            if (response.IsSuccessStatusCode)
-            {
-                // Randevu başarıyla kaydedildi
-                return RedirectToAction("Confirmation", new { id = vm.SelectedDoctorId });
-            }
-            else
-            {
-                ModelState.AddModelError("", "Randevu kaydedilemedi.");
-                return View("Book", vm);
-            }
+            return Json(slots);
         }
 
-
+        [Authorize(Roles = "Patient")]
+        [HttpPost]
+        public async Task<IActionResult> Create()
     }
 }
+

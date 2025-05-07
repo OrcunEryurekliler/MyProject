@@ -43,35 +43,17 @@ namespace MyProject.WebAPI.Controllers
         }
 
 
-        
-        [Authorize(Roles = "Patient")]
+
+        // GET /api/appointment/slots?doctorId=5&date=2025-05-02
         [HttpGet("slots")]
-        public async Task<IActionResult> GetAppointmentSlots([FromQuery] int doctorId, [FromQuery] DateTime date)
+        //[Authorize(Roles = "Patient")]
+        public async Task<IActionResult> GetAppointmentSlots([FromQuery] int doctorId,[FromQuery] DateTime date)
         {
-            try
-            {
-                var appointments = await _appointmentService.GetAvailableTimeslotsAsync(doctorId, date);
-                var bookedTimes = appointments.Select(a => a.StartTime.TimeOfDay).ToList();
-
-
-                var allSlots = SlotGenerator.GenerateDailySlots();
-
-                var slotDtos = allSlots.Select(slot => new SlotDto
-                {
-                    Time = slot,
-                    IsBooked = bookedTimes.Contains(slot)
-                }).ToList();
-
-                return Ok(slotDtos);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Slot error: {ex.Message}");
-                return StatusCode(500, "Slot bilgileri alınamadı.");
-            }
+            var slots = await _appointmentService.GetAvailableTimeslotsAsync(doctorId, date);
+            return Ok(slots);
         }
-        
-        
+
+
 
 
         /*[Authorize]

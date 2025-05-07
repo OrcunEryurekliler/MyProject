@@ -65,19 +65,22 @@ public class AppointmentService : Service<Appointment>, IAppointmentService
 
     public async Task<IEnumerable<AppointmentSlotDto>> GetAvailableTimeslotsAsync(int doctorId, DateTime date)
     {
-        var allSlots = SlotGenerator.GenerateDailySlots(); // List<TimeOnly>
-        var appointments = await _appointmentRepository.GetAppointmentsByDoctorAndDateAsync(doctorId, date);
-        var bookedSlots = appointments.Select(a => TimeOnly.FromDateTime(a.StartTime)).ToList();
+        var allSlots = SlotGenerator.GenerateDailySlots();  // List<TimeSpan>
+        var appointments = await _appointmentRepository
+                                 .GetAppointmentsByDoctorAndDateAsync(doctorId, date);
+        var bookedTimes = appointments
+                            .Select(a => a.StartTime.TimeOfDay)
+                            .ToHashSet();
 
-        var slotDtos = allSlots.Select((slot, index) => new AppointmentSlotDto
+        return allSlots.Select((slot, idx) => new AppointmentSlotDto
         {
-            Id = index,
+            Id = idx,
             SlotTime = slot,
-            IsAvailable = !bookedSlots.Contains(slot)
-        });
-
-        return slotDtos;
+            IsAvailable = !bookedTimes.Contains(slot)
+        })
+        .ToList();
     }
+
 
 
 
