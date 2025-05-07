@@ -117,9 +117,6 @@ namespace MyProject.Web.Controllers
             return Json(slots);
         }
 
-        [Authorize(Roles = "Patient")]
-        [HttpPost]
-        public async Task<IActionResult> Create()
     }
 }
 

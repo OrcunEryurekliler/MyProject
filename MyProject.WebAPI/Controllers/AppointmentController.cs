@@ -54,32 +54,5 @@ namespace MyProject.WebAPI.Controllers
         }
 
 
-
-
-        /*[Authorize]
-        [HttpPost("create")]
-        public async Task<IActionResult> Create([FromBody] CreateAppointmentDto dto)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-           
-            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-            var patientId = await _appointmentService.GetPatientIdByUserId(userId);
-            var appointment = new Appointment
-            {
-                DoctorProfileId = dto.DoctorProfileId,
-                PatientProfileId = patientId,
-                StartTime = dto.StartTime,
-                EndTime = dto.StartTime.AddMinutes(dto.DurationMinutes), // <-- BURADA
-                Status = dto.Status ?? "Pending"
-            };
-
-            var result = await _appointmentService.AddAsync(appointment);
-            if (result)
-                return Ok(new { message = "Randevu başarıyla oluşturuldu." });
-
-            return BadRequest(new { message = "Randevu oluşturulamadı." });
-        }*/
-
     }
 }

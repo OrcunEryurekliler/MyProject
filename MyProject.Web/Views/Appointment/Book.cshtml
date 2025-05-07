@@ -1,75 +1,141 @@
 ﻿@model AppointmentBookingViewModel
 
 <form asp-action="Book" method="post">
-	<!-- uzmanlık & tarih -->
-	<select asp-for="SelectedSpecializationId" asp-items="Model.Specializations"></select>
-	<input asp-for="SelectedDate" type="date" />
+    <!-- Uzmanlık ve Tarih Seçimi -->
+    <select asp-for="SelectedSpecializationId" asp-items="Model.Specializations" class="form-select mb-2"></select>
+    <input asp-for="SelectedDate" type="date" class="form-control mb-2" />
 
-	<button type="submit">Doktorları Getir</button>
+    <button type="submit" class="btn btn-primary">Doktorları Getir</button>
 </form>
 
 @if (Model.AvailableDoctors?.Any() == true)
 {
-	<select asp-for="SelectedDoctorId" id="doctorSelect">
-		@foreach (var d in Model.AvailableDoctors)
-		{
-			<option value="@d.Id">@d.FullName</option>
-		}
-	</select>
-	<button id="loadSlots">Saatleri Göster</button>
-	<select asp-for="SelectedAppointmentSlotId" name="SelectedAppointmentSlotId">
-		<option>Seçiniz</option>
-	</select>
+    <!-- Doktor Seçimi -->
+    <select asp-for="SelectedDoctorId" id="doctorSelect" class="form-select mt-3">
+        @foreach (var d in Model.AvailableDoctors)
+        {
+            <option value="@d.Id">@d.FullName</option>
+        }
+    </select>
+
+    <!-- Randevu Seçme Butonu -->
+    <button type="button" id="selectSlotBtn" class="btn btn-info mt-3" disabled>Randevu Seç</button>
 }
 
+<!-- Pop-Up Modal -->
+<div class="modal fade" id="slotModal" tabindex="-1" aria-labelledby="slotModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="slotModalLabel">Randevu Saatlerini Seçin</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="slotButtonsContainer" class="d-flex flex-wrap gap-2">
+                    <!-- Slot butonları burada görünecek -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                <button type="button" id="submitAppointment" class="btn btn-success" disabled>Randevu Al</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
-	<script>
-				document.getElementById('loadSlots').addEventListener('click', async () => {
-		  const docSelect = document.getElementById('doctorSelect');
-		  const docId = docSelect ? docSelect.value : null;
-		  const dateInput = document.querySelector('input[name="SelectedDate"]');
-		  const date = dateInput ? dateInput.value : null;
-		  const slotSelect = document.querySelector('select[name="SelectedAppointmentSlotId"]');
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const doctorSelect         = document.getElementById('doctorSelect');
+            const dateInput            = document.querySelector('input[name="SelectedDate"]');
+            const selectSlotBtn        = document.getElementById('selectSlotBtn');
+            const slotButtonsContainer = document.getElementById('slotButtonsContainer');
+            const submitBtn            = document.getElementById('submitAppointment');
 
-		  if (!docId || !date) {
-			alert('Lütfen doktor ve tarih seçiniz.');
-			return;
-		  }
+            if (!doctorSelect || !dateInput || !selectSlotBtn || !slotButtonsContainer || !submitBtn) return;
 
-		  slotSelect.innerHTML = '<option>Seçiniz</option>';
+            // Randevu Seç butonunu her zaman aktif tut
+            selectSlotBtn.disabled = false;
 
-		  try {
-			const response = await fetch(`/Appointment/Slots?doctorId=${docId}&date=${date}`);
-			if (!response.ok) throw new Error('Sunucudan geçerli bir yanıt alınamadı.');
-			const slots = await response.json();
-					console.log("Gelen slotlar:", slots);
-		slots.forEach(s => {
-			console.log("Slot içeriği:", s);
-		});
+            async function loadSlots() {
+                const doctorId = doctorSelect.value;
+                const date = dateInput.value;
 
-					slots.forEach(s => {
-			var timeText = (s.slotTime || '').toString(); // null veya undefined olursa boş string olur
+                slotButtonsContainer.innerHTML = '';
 
-			var opt = document.createElement('option');
-			opt.value = s.id;
+                try {
+                    const res = await fetch(`/appointment/slots?doctorId=${doctorId}&date=${date}`);
+                    if (!res.ok) throw new Error();
+                    const slots = await res.json();
 
-			// Güvenli bir şekilde ilk 5 karakter (HH:mm) al
-			opt.text = timeText.length >= 5 ? timeText.substring(0, 5) : timeText;
+                    if (!slots || slots.length === 0) {
+                        slotButtonsContainer.innerHTML = '<div class="text-muted">Uygun slot bulunamadı.</div>';
+                        submitBtn.disabled = true;
+                        return;
+                    }
 
-			if (!s.isAvailable) {
-				opt.disabled = true;
-				opt.style.color = 'red';
-			}
+                    submitBtn.disabled = true; // Her yenilemede sıfırla
 
-			slotSelect.appendChild(opt);
-		});
+                    slots.forEach(s => {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'btn';
+                        btn.textContent = s.slotTime.substring(0, 5);
 
-		  } catch (error) {
-			console.error('Slotları yüklerken hata oluştu:', error);
-			alert('Slotları yüklerken bir hata oluştu. Lütfen daha sonra tekrar deneyiniz.');
-		  }
-		});
+                        if (!s.isAvailable) {
+                            btn.classList.add('btn-danger');
+                            btn.disabled = true;
+                        } else {
+                            btn.classList.add('btn-outline-secondary');
+                            btn.addEventListener('click', () => {
+                                Array.from(slotButtonsContainer.children).forEach(b => {
+                                    b.classList.remove('btn-success');
+                                    b.classList.add('btn-outline-secondary');
+                                });
 
-	</script>
+                                btn.classList.remove('btn-outline-secondary');
+                                btn.classList.add('btn-success');
+                                btn.dataset.selectedSlotId = s.id;
+
+                                submitBtn.disabled = false;
+                            });
+                        }
+
+                        slotButtonsContainer.appendChild(btn);
+                    });
+                } catch {
+                    slotButtonsContainer.innerHTML = '<div class="text-danger">Slotlar yüklenemedi.</div>';
+                    submitBtn.disabled = true;
+                }
+            }
+
+            // Eğer doktor varsa, sayfa yüklendiğinde otomatik olarak slotları getir
+            if (doctorSelect && doctorSelect.options.length > 0) {
+                loadSlots();
+            }
+
+            doctorSelect.addEventListener('change', loadSlots);
+            dateInput.addEventListener('change', loadSlots);
+
+            selectSlotBtn.addEventListener('click', () => {
+                new bootstrap.Modal(document.getElementById('slotModal')).show();
+            });
+
+            submitBtn.addEventListener('click', () => {
+                const selected = Array.from(slotButtonsContainer.children)
+                    .find(b => b.classList.contains('btn-success'));
+
+                if (!selected) {
+                    alert('Lütfen bir slot seçin.');
+                    return;
+                }
+
+                const slotId = selected.dataset.selectedSlotId;
+                const slotText = selected.textContent;
+                const selectedDate = dateInput.value.split('-').reverse().join('.');
+
+                alert(`Randevunuz ${selectedDate} tarihinde ${slotText} saati için oluşturulmuştur.`);
+            });
+        });
+    </script>
 }
